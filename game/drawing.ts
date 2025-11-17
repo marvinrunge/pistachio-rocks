@@ -1,4 +1,4 @@
-import type { PlayerState, ElementState, Season, ShellBreakAnimationState, CharacterId, ShellReformAnimationState, BurningPatchState } from '../types';
+import type { PlayerState, ElementState, Season, ShellBreakAnimationState, CharacterId, ShellReformAnimationState, BurningPatchState, CloudState, ParticleState, GameStatus, FloatingScoreState, FloatingTextState, LightningStrike } from '../types';
 import type { Character } from './characters/index';
 import { PLAYER_WIDTH, PLAYER_HEIGHT, GAME_HEIGHT, GROUND_HEIGHT } from '../constants';
 import { groundDetails } from './state';
@@ -246,4 +246,157 @@ export function drawGround(ctx: CanvasRenderingContext2D, season: Season, curren
         ctx.fillStyle = overlayColor;
         ctx.fillRect(0, groundY, gameWidth, GROUND_HEIGHT);
     }
+}
+
+export function drawGame(
+    ctx: CanvasRenderingContext2D,
+    renderContext: { scale: number, offsetX: number, offsetY: number },
+    screenShake: { x: number, y: number },
+    season: Season,
+    currentEvent: string | null,
+    gameDimensions: { width: number, height: number },
+    clouds: CloudState[],
+    burningPatches: BurningPatchState[],
+    timeInMonth: number,
+    gameState: { player: PlayerState, elements: ElementState[] },
+    particles: ParticleState[],
+    gameStatus: GameStatus,
+    shellBreakAnimation: ShellBreakAnimationState | null,
+    character: Character,
+    maxHealth: number,
+    shellReformAnimation: ShellReformAnimationState | null,
+    floatingScores: FloatingScoreState[],
+    floatingTexts: FloatingTextState[],
+    lightningStrikes: LightningStrike[],
+    screenFlash: number,
+    currentFrameTime: number,
+) {
+    const clientWidth = gameDimensions.width * renderContext.scale;
+    const clientHeight = gameDimensions.height * renderContext.scale;
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform to identity matrix
+    ctx.clearRect(0, 0, clientWidth, clientHeight);
+    
+    // Apply global scaling and transformations
+    ctx.save();
+    ctx.translate(renderContext.offsetX, renderContext.offsetY);
+    ctx.scale(renderContext.scale, renderContext.scale);
+    ctx.translate(screenShake.x, screenShake.y);
+    
+    // Draw Background
+    let bgColor = { from: '#87CEEB', to: '#4682B4' };
+    if (season === 'summer') bgColor = { from: '#c0ecf7ff', to: '#f5bcabff' };
+    if (season === 'autumn') bgColor = { from: '#fde68a', to: '#fb923c' };
+    if (season === 'winter') bgColor = { from: '#e0f2fe', to: '#bae6fd' };
+    if (currentEvent === 'thunderstorm' || currentEvent === 'storm') bgColor = { from: '#4b5563', to: '#1f2937' };
+    if (currentEvent === 'meteorShower') bgColor = { from: '#1e1b4b', to: '#0c0a09'};
+    const gradient = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
+    gradient.addColorStop(0, bgColor.from);
+    gradient.addColorStop(1, bgColor.to);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, gameDimensions.width, GAME_HEIGHT);
+    
+    // Draw clouds
+    clouds.forEach(cloud => {
+        ctx.fillStyle = cloud.isStormCloud ? 'rgba(50, 50, 70, 0.7)' : 'rgba(255, 255, 255, 0.7)';
+        ctx.beginPath();
+        ctx.ellipse(cloud.x + cloud.width / 2, cloud.y, cloud.width / 2, cloud.height / 2, 0, 0, 2 * Math.PI);
+        ctx.fill();
+    });
+
+    // Draw fog for blizzard
+    if (currentEvent === 'blizzard') {
+        const fogGradient = ctx.createLinearGradient(0, GAME_HEIGHT, 0, GAME_HEIGHT - GROUND_HEIGHT - 150);
+        fogGradient.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+        fogGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = fogGradient;
+        ctx.fillRect(0, 0, gameDimensions.width, GAME_HEIGHT);
+    }
+    
+    drawGround(ctx, season, currentEvent, gameDimensions.width, burningPatches, timeInMonth);
+    
+    // Draw elements
+    gameState.elements.forEach(el => drawRainingElement(ctx, el, season));
+    
+    // Draw particles
+    particles.forEach(p => {
+        if (p.type === 'leaf') {
+             ctx.save();
+             ctx.translate(p.x, p.y);
+             ctx.fillStyle = p.color;
+             ctx.globalAlpha = Math.max(0, p.lifespan / 2);
+             ctx.beginPath();
+             ctx.ellipse(0, 0, p.size / 2, p.size * 0.35, 0, 0, 2*Math.PI);
+             ctx.fill();
+             ctx.restore();
+        } else if (p.type === 'dust') {
+             ctx.fillStyle = p.color;
+             ctx.globalAlpha = Math.max(0, p.lifespan);
+             ctx.fillRect(p.x, p.y, p.size * 5, p.size / 3);
+             ctx.globalAlpha = 1;
+        } else {
+             ctx.fillStyle = p.color;
+             ctx.globalAlpha = Math.max(0, p.lifespan);
+             ctx.beginPath();
+             ctx.arc(p.x, p.y, p.size, 0, 2 * Math.PI);
+             ctx.fill();
+             ctx.globalAlpha = 1;
+        }
+    });
+
+    if (gameStatus === 'playing') {
+        drawPlayer(ctx, gameState.player, shellBreakAnimation, character, maxHealth, shellReformAnimation);
+    }
+    
+    // Draw floating scores and texts
+    ctx.font = 'bold 20px "Press Start 2P", monospace';
+    floatingScores.forEach(fs => {
+        ctx.globalAlpha = fs.lifespan;
+        ctx.fillStyle = fs.isGolden ? '#fef08a' : '#ffffff';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 4;
+        const text = `+${fs.amount}`;
+        const textWidth = ctx.measureText(text).width;
+        ctx.strokeText(text, fs.x - textWidth / 2, fs.y);
+        ctx.fillText(text, fs.x - textWidth / 2, fs.y);
+    });
+    
+    ctx.font = 'bold 24px "Press Start 2P", monospace';
+    floatingTexts.forEach(ft => {
+        ctx.globalAlpha = ft.lifespan;
+        ctx.fillStyle = ft.color;
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 4;
+        const textWidth = ctx.measureText(ft.text).width;
+        ctx.strokeText(ft.text, ft.x - textWidth / 2, ft.y);
+        ctx.fillText(ft.text, ft.x - textWidth / 2, ft.y);
+    });
+
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = 1;
+
+    // Draw lightning strikes
+    if (currentEvent === 'thunderstorm') {
+        lightningStrikes.forEach(strike => {
+            const timeSinceWarning = currentFrameTime - strike.warningStartTime;
+            if (timeSinceWarning > 0 && !strike.hasStruck) {
+                // Warning indicator
+                const warningOpacity = Math.min(0.5, timeSinceWarning / 1000);
+                ctx.fillStyle = `rgba(255, 255, 100, ${warningOpacity})`;
+                ctx.fillRect(strike.x, 0, strike.width, GAME_HEIGHT - GROUND_HEIGHT);
+            }
+            if (strike.hasStruck) {
+                // Actual strike
+                ctx.fillStyle = 'white';
+                ctx.fillRect(strike.x, 0, strike.width, GAME_HEIGHT - GROUND_HEIGHT);
+            }
+        });
+    }
+
+    if (screenFlash > 0) {
+        ctx.fillStyle = `rgba(255, 255, 255, ${screenFlash})`;
+        ctx.fillRect(0, 0, gameDimensions.width, GAME_HEIGHT);
+    }
+
+    ctx.restore(); // Restore from global scaling
 }

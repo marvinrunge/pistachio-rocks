@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import type { PlayerState, ElementState, ParticleState, Skill, LightningStrike, Season, FloatingTextState, HighScoreEntry, ElementType, GameStatus, CloudState, FloatingScoreState, ShellBreakAnimationState, ShellPieceState, ScorePayload, SubmissionResult, CharacterId, ShellReformAnimationState, BurningPatchState } from '../types';
 import {
   GAME_HEIGHT,
@@ -31,12 +31,14 @@ import { loadLocalHighScores, saveLocalHighScores, savePlayerName } from '../uti
 import { getHighScores, startNewGameSession, submitScore } from '../utils/leaderboard';
 import { PERMANENT_SKILL_POOL, EVENT_SKILL_POOL, YEARLY_SKILL_POOL } from '../game/skills';
 import { getInitialPlayerState, generateInitialClouds } from '../game/state';
-import { drawRainingElement, drawGround, drawPlayer } from '../game/drawing';
+import { drawGame } from '../game/drawing';
 import { assetManager } from '../game/assets';
-// FIX: Corrected import path for characters module.
 import { getCharacterById, type Character } from '../game/characters/index';
-
-const JUMP_SWIPE_THRESHOLD = 50; // pixels
+import { useInput } from './useInput';
+import { useGameState } from './useGameState';
+import { createRockParticles, createWaterSplashParticles, createDustParticles, createSeasonalParticles, updateParticles } from '../game/particleLogic';
+import { spawnElements, updateElements } from '../game/elementLogic';
+import { updateEvents, getIncomingEventTitle } from '../game/eventLogic';
 
 interface UseGameLogicProps {
     canvasRef: React.RefObject<HTMLCanvasElement>;
@@ -44,62 +46,50 @@ interface UseGameLogicProps {
 }
 
 export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) => {
-  const [clouds, setClouds] = useState<CloudState[]>([]);
-  
-  const [gameState, setGameState] = useState<{player: PlayerState, elements: ElementState[]}>({player: getInitialPlayerState('pistachio'), elements: []});
-  const [particles, setParticles] = useState<ParticleState[]>([]);
-  const [floatingScores, setFloatingScores] = useState<FloatingScoreState[]>([]);
-  const [floatingTexts, setFloatingTexts] = useState<FloatingTextState[]>([]);
-  const [gameStatus, setGameStatus] = useState<GameStatus>('start');
-  const [score, setScore] = useState(0);
-  const [difficultyLevel, setDifficultyLevel] = useState(1);
-  const [monthCounter, setMonthCounter] = useState(1);
-  const [timeInMonth, setTimeInMonth] = useState(0);
-  const [availableSkills, setAvailableSkills] = useState<Skill[]>([]);
-  const [season, setSeason] = useState<Season>('spring');
-  const [playerSlowTimer, setPlayerSlowTimer] = useState(0);
-  const [rocksDestroyed, setRocksDestroyed] = useState(0);
-  const [highScores, setHighScores] = useState<HighScoreEntry[]>([]);
-  const [leaderboardState, setLeaderboardState] = useState<'idle' | 'loading' | 'submitting' | 'error'>('idle');
-  const [acquiredSkills, setAcquiredSkills] = useState<Skill[]>([]);
-  const [lastSubmissionResult, setLastSubmissionResult] = useState<SubmissionResult | null>(null);
-  const [assetsReady, setAssetsReady] = useState(false);
-  
-  const [selectedCharacterId, setSelectedCharacterId] = useState<CharacterId>(() => {
-    try {
-      return (localStorage.getItem('selectedCharacter') as CharacterId) || 'pistachio';
-    } catch (e) {
-      return 'pistachio';
-    }
-  });
-  const [character, setCharacter] = useState<Character>(() => getCharacterById(selectedCharacterId));
+  const {
+    clouds, setClouds,
+    gameState, setGameState,
+    particles, setParticles,
+    floatingScores, setFloatingScores,
+    floatingTexts, setFloatingTexts,
+    gameStatus, setGameStatus,
+    score, setScore,
+    difficultyLevel, setDifficultyLevel,
+    monthCounter, setMonthCounter,
+    timeInMonth, setTimeInMonth,
+    availableSkills, setAvailableSkills,
+    season, setSeason,
+    playerSlowTimer, setPlayerSlowTimer,
+    rocksDestroyed, setRocksDestroyed,
+    highScores, setHighScores,
+    leaderboardState, setLeaderboardState,
+    acquiredSkills, setAcquiredSkills,
+    lastSubmissionResult, setLastSubmissionResult,
+    assetsReady, setAssetsReady,
+    selectedCharacterId, setSelectedCharacterId,
+    character, setCharacter,
+    maxHealth, setMaxHealth,
+    maxSpeed, setMaxSpeed,
+    extraLives, setExtraLives,
+    blockChance, setBlockChance,
+    bonusHeal, setBonusHeal,
+    waterSpawnInterval, setWaterSpawnInterval,
+    photosynthesisLevel, setPhotosynthesisLevel,
+    goldenTouchChance, setGoldenTouchChance,
+    currentEvent, setCurrentEvent,
+    incomingEventTitle, setIncomingEventTitle,
+    lightningStrikes, setLightningStrikes,
+    burningPatches, setBurningPatches,
+    screenFlash, setScreenFlash,
+    screenShake, setScreenShake,
+    windDirection, setWindDirection,
+    shellBreakAnimation, setShellBreakAnimation,
+    shellReformAnimation, setShellReformAnimation,
+    resetGameState,
+  } = useGameState(gameDimensions);
 
+  const { getInputState, handleTouchStart, handleTouchMove, handleTouchEnd, resetGameInput } = useInput(gameStatus === 'playing');
 
-  // --- Player Stats State ---
-  const [maxHealth, setMaxHealth] = useState(INITIAL_MAX_HEALTH);
-  const [maxSpeed, setMaxSpeed] = useState(MAX_PLAYER_SPEED);
-  const [extraLives, setExtraLives] = useState(0);
-  const [blockChance, setBlockChance] = useState(0);
-  const [bonusHeal, setBonusHeal] = useState(0);
-  const [waterSpawnInterval, setWaterSpawnInterval] = useState(INITIAL_WATER_SPAWN_INTERVAL);
-
-  // --- Legendary Skill State ---
-  const [photosynthesisLevel, setPhotosynthesisLevel] = useState(0);
-  const [goldenTouchChance, setGoldenTouchChance] = useState(0);
-
-  // --- Special Event State ---
-  const [currentEvent, setCurrentEvent] = useState<string | null>(null);
-  const [incomingEventTitle, setIncomingEventTitle] = useState<string | null>(null);
-  const [lightningStrikes, setLightningStrikes] = useState<LightningStrike[]>([]);
-  const [burningPatches, setBurningPatches] = useState<BurningPatchState[]>([]);
-  const [screenFlash, setScreenFlash] = useState(0);
-  const [screenShake, setScreenShake] = useState({ x: 0, y: 0 });
-  const [windDirection, setWindDirection] = useState<'left' | 'right' | null>(null);
-  const [shellBreakAnimation, setShellBreakAnimation] = useState<ShellBreakAnimationState | null>(null);
-  const [shellReformAnimation, setShellReformAnimation] = useState<ShellReformAnimationState | null>(null);
-
-
-  const keysPressed = useRef<Record<string, boolean>>({});
   const lastRockSpawnTime = useRef(0);
   const lastWaterSpawnTime = useRef(0);
   const lastFrameTime = useRef<number>(performance.now());
@@ -109,10 +99,6 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
   const lastGroundDamageTime = useRef(0);
   const renderContext = useRef({ scale: 1, offsetX: 0, offsetY: 0 });
   const gameSessionIdRef = useRef<string | null>(null);
-
-  // --- Touch Controls State ---
-  const activeTouches = useRef<Map<number, 'left' | 'right'>>(new Map());
-  const touchStartPos = useRef<Map<number, number>>(new Map());
 
   // Load assets on initial mount
   useEffect(() => {
@@ -125,127 +111,26 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
     setClouds(generateInitialClouds(gameDimensions.width));
   }, []);
 
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    keysPressed.current[e.key.toLowerCase()] = true;
-  }, []);
-
-  const handleKeyUp = useCallback((e: KeyboardEvent) => {
-    keysPressed.current[e.key.toLowerCase()] = false;
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, [handleKeyDown, handleKeyUp]);
-  
   useEffect(() => {
     const seasons: Season[] = ['spring', 'summer', 'autumn', 'winter'];
     const seasonIndex = Math.floor((monthCounter - 1) / 3) % 4;
     setSeason(seasons[seasonIndex]);
   }, [monthCounter]);
 
-  // --- Touch Control Handlers ---
-  const updateMovementFromTouches = useCallback(() => {
-      let moveLeft = false;
-      let moveRight = false;
-      for (const side of activeTouches.current.values()) {
-          if (side === 'left') moveLeft = true;
-          if (side === 'right') moveRight = true;
-      }
-      keysPressed.current['touchleft'] = moveLeft;
-      keysPressed.current['touchright'] = moveRight;
-  }, []);
-
-  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
-      if (gameStatus !== 'playing') return;
-      for (let i = 0; i < e.changedTouches.length; i++) {
-          const touch = e.changedTouches[i];
-          const side = touch.clientX < window.innerWidth / 2 ? 'left' : 'right';
-          activeTouches.current.set(touch.identifier, side);
-          touchStartPos.current.set(touch.identifier, touch.clientY);
-      }
-      updateMovementFromTouches();
-  }, [updateMovementFromTouches, gameStatus]);
-  
-  const handleTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
-      if (gameStatus !== 'playing') return;
-      for (let i = 0; i < e.changedTouches.length; i++) {
-          const touch = e.changedTouches[i];
-          const startY = touchStartPos.current.get(touch.identifier);
-          if (startY !== undefined) {
-              const deltaY = startY - touch.clientY;
-              if (deltaY > JUMP_SWIPE_THRESHOLD) {
-                  keysPressed.current['touchjump'] = true;
-                  touchStartPos.current.delete(touch.identifier); 
-              }
-          }
-      }
-  }, [gameStatus]);
-
-  const handleTouchEnd = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
-      if (gameStatus !== 'playing') return;
-      for (let i = 0; i < e.changedTouches.length; i++) {
-          const touch = e.changedTouches[i];
-          activeTouches.current.delete(touch.identifier);
-          touchStartPos.current.delete(touch.identifier);
-      }
-      updateMovementFromTouches();
-  }, [updateMovementFromTouches, gameStatus]);
-
   const startGame = () => {
-    const selectedChar = getCharacterById(selectedCharacterId);
-    setCharacter(selectedChar);
-
     if (!audioInitialized.current) {
         initAudio();
         audioInitialized.current = true;
     }
-    setGameState({player: {...getInitialPlayerState(selectedCharacterId), x: gameDimensions.width / 2 - PLAYER_WIDTH / 2}, elements: []});
-    setParticles([]);
-    setFloatingScores([]);
-    setFloatingTexts([]);
-    setScore(0);
-    setDifficultyLevel(1);
-    setMonthCounter(1);
-    setTimeInMonth(0);
-    lastRockSpawnTime.current = 0;
-    lastWaterSpawnTime.current = 0;
-    setClouds(generateInitialClouds(gameDimensions.width));
-    setSeason('spring');
-    setPlayerSlowTimer(0);
-    setRocksDestroyed(0);
+    
+    resetGameState(selectedCharacterId);
+    
     standStillTimer.current = 0;
     groundDamageAccumulator.current = 0;
     lastGroundDamageTime.current = 0;
-    setAcquiredSkills([]);
-    setLastSubmissionResult(null);
+    lastRockSpawnTime.current = 0;
+    lastWaterSpawnTime.current = 0;
 
-    // Reset Player Stats based on Character
-    setMaxHealth(INITIAL_MAX_HEALTH + (selectedChar.startingStats.maxHealth || 0));
-    setMaxSpeed(MAX_PLAYER_SPEED + (selectedChar.startingStats.maxSpeed || 0));
-    setExtraLives(selectedChar.startingStats.extraLives || 0);
-    setBlockChance(selectedChar.startingStats.blockChance || 0);
-    setBonusHeal(selectedChar.startingStats.bonusHeal || 0);
-    setWaterSpawnInterval(INITIAL_WATER_SPAWN_INTERVAL);
-
-    // Reset Legendary Skills
-    setPhotosynthesisLevel(0);
-    setGoldenTouchChance(selectedChar.startingStats.goldenTouchChance || 0);
-
-    // Reset Events
-    setCurrentEvent(null);
-    setLightningStrikes([]);
-    setBurningPatches([]);
-    setScreenShake({ x: 0, y: 0 });
-    setWindDirection(null);
-    setIncomingEventTitle(null);
-    setShellBreakAnimation(null);
-    setShellReformAnimation(null);
-    
     // Start a new game session with the backend
     startNewGameSession()
       .then(gameId => {
@@ -331,8 +216,7 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
 
   const handleLevelUp = useCallback(() => {
     // FIX: Reset touch and keyboard states to prevent unwanted movement after skill selection.
-    activeTouches.current.clear();
-    keysPressed.current = {};
+    resetGameInput();
 
     setIncomingEventTitle(null);
     const eventJustEnded = (monthCounter - 1) % 3 === 2;
@@ -566,37 +450,9 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
 
         const nextTimeInMonth = timeInMonth + deltaTime;
 
-        const isPreEventMonth = (monthCounter - 1) % 3 === 1;
-        const isWarningTime = timeInMonth >= 24; // Show warning in the last 6 seconds (30 - 6)
-
-        if (isPreEventMonth && isWarningTime) {
-            if (!incomingEventTitle) {
-                const nextMonth = monthCounter + 1;
-                const nextYear = Math.floor((nextMonth -1) / 12) + 1;
-                const nextSeasonIndex = Math.floor((nextMonth - 1) / 3) % 4;
-                let eventName = '';
-                
-                const isNextAMeteorYear = nextYear >= 2 && (nextYear - 2) % 3 === 0;
-
-                if (isNextAMeteorYear && nextSeasonIndex === 1) {
-                    eventName = 'METEOR SHOWER';
-                } else {
-                    switch (nextSeasonIndex) {
-                        case 0: eventName = 'STORM'; break;
-                        case 1: eventName = 'THUNDERSTORM'; break;
-                        case 2: eventName = 'EARTHQUAKE'; break;
-                        case 3: eventName = 'BLIZZARD'; break;
-                    }
-                }
-                
-                if (eventName) {
-                    setIncomingEventTitle(`${eventName} INCOMING`);
-                }
-            }
-        } else {
-            if (incomingEventTitle) {
-                setIncomingEventTitle(null);
-            }
+        const newIncomingEventTitle = getIncomingEventTitle(monthCounter, timeInMonth);
+        if (newIncomingEventTitle !== incomingEventTitle) {
+            setIncomingEventTitle(newIncomingEventTitle);
         }
         
         let nextPlayerState = { ...gameState.player };
@@ -640,94 +496,7 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
             }
         }
 
-        const createRockParticles = (rock: { x: number, y: number, size: number, id: number }, isGolden: boolean = false) => {
-            const numParticles = 8 + Math.floor(rock.size / 4);
-            const random = (seed: number) => {
-                const x = Math.sin(seed) * 10000;
-                return x - Math.floor(x);
-            };
-            const rockColor = isGolden ? `rgb(255, 215, 0)` :`rgb(${100 + random(rock.id)*20}, ${100 + random(rock.id+1)*20}, ${100 + random(rock.id+2)*20})`;
-
-            for (let i = 0; i < numParticles; i++) {
-                if (particles.length + particlesToCreate.length >= MAX_PARTICLES) break;
-                const angle = Math.random() * 2 * Math.PI;
-                const speed = 100 + Math.random() * 180;
-                particlesToCreate.push({
-                    id: Math.random(),
-                    x: rock.x + rock.size / 2,
-                    y: rock.y + rock.size / 2,
-                    xVelocity: Math.cos(angle) * speed,
-                    yVelocity: Math.sin(angle) * speed - 200,
-                    size: 2 + Math.random() * 4,
-                    color: rockColor,
-                    lifespan: 0.8 + Math.random() * 0.7,
-                    type: 'rock',
-                });
-            }
-        };
-        
-        const createWaterSplashParticles = (splash: {x: number, y: number, size: number}) => {
-            const numParticles = 10 + Math.floor(splash.size / 2);
-            for (let i = 0; i < numParticles; i++) {
-                if (particles.length + particlesToCreate.length >= MAX_PARTICLES) break;
-                const angle = Math.PI + Math.random() * Math.PI;
-                const speed = 60 + Math.random() * 100;
-                particlesToCreate.push({
-                    id: Math.random(),
-                    x: splash.x + splash.size / 2,
-                    y: splash.y,
-                    xVelocity: Math.cos(angle) * speed,
-                    yVelocity: -Math.sin(angle) * speed * 2.2,
-                    size: 1 + Math.random() * 2,
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    lifespan: 0.5 + Math.random() * 0.5,
-                    type: 'water',
-                });
-            }
-        };
-        
-        const createDustParticles = (dust: {x: number, y: number, count: number, intensity: number}) => {
-            for (let i = 0; i < dust.count; i++) {
-                if (particles.length + particlesToCreate.length >= MAX_PARTICLES) break;
-                const angle = Math.PI + Math.random() * Math.PI;
-                const speed = dust.intensity * (0.5 + Math.random());
-                particlesToCreate.push({
-                    id: Math.random(),
-                    x: dust.x,
-                    y: dust.y,
-                    xVelocity: Math.cos(angle) * speed,
-                    yVelocity: -Math.sin(angle) * speed * 0.6,
-                    size: 2 + Math.random() * 3,
-                    color: 'rgba(139, 115, 85, 0.7)',
-                    lifespan: 0.4 + Math.random() * 0.4,
-                    type: 'dust',
-                });
-            }
-        };
-
-        const gamepads = navigator.getGamepads();
-        const gamepad = gamepads[0];
-        
-        keysPressed.current['gamepadleft'] = false;
-        keysPressed.current['gamepadright'] = false;
-        keysPressed.current['gamepadjump'] = false;
-
-        if (gamepad) {
-            const DEADZONE = 0.25;
-            const leftStickX = gamepad.axes[0];
-
-            if (gamepad.buttons[14] && gamepad.buttons[14].pressed) keysPressed.current['gamepadleft'] = true;
-            if (gamepad.buttons[15] && gamepad.buttons[15].pressed) keysPressed.current['gamepadright'] = true;
-
-            if (leftStickX < -DEADZONE) keysPressed.current['gamepadleft'] = true;
-            if (leftStickX > DEADZONE) keysPressed.current['gamepadright'] = true;
-            
-            if (gamepad.buttons[0] && gamepad.buttons[0].pressed) keysPressed.current['gamepadjump'] = true;
-        }
-
-        const isTryingToJump = keysPressed.current['w'] || keysPressed.current['arrowup'] || keysPressed.current[' '] || keysPressed.current['touchjump'] || keysPressed.current['gamepadjump'];
-        const isMovingLeft = keysPressed.current['a'] || keysPressed.current['arrowleft'] || keysPressed.current['touchleft'] || keysPressed.current['gamepadleft'];
-        const isMovingRight = keysPressed.current['d'] || keysPressed.current['arrowright'] || keysPressed.current['touchright'] || keysPressed.current['gamepadright'];
+        const { isMovingLeft, isMovingRight, isTryingToJump, resetJump } = getInputState();
 
         const friction = (currentEvent === 'blizzard' && nextPlayerState.y <= GROUND_HEIGHT) ? ICE_FRICTION : GROUND_FRICTION;
         const effectiveAcceleration = newPlayerSlowTimer > 0 ? PLAYER_ACCELERATION * 0.5 : PLAYER_ACCELERATION;
@@ -764,10 +533,8 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
         if (isTryingToJump && nextPlayerState.y <= GROUND_HEIGHT) {
           nextPlayerState.yVelocity = JUMP_STRENGTH;
           playJumpSound();
-          createDustParticles({ x: nextPlayerState.x + PLAYER_WIDTH / 2, y: GAME_HEIGHT - GROUND_HEIGHT, count: 10, intensity: 60 });
-          if (keysPressed.current['touchjump']) {
-              keysPressed.current['touchjump'] = false;
-          }
+          particlesToCreate.push(...createDustParticles({ x: nextPlayerState.x + PLAYER_WIDTH / 2, y: GAME_HEIGHT - GROUND_HEIGHT, count: 10, intensity: 60 }));
+          resetJump();
         }
         
         const isStandingStill = photosynthesisLevel > 0 && Math.abs(nextPlayerState.xVelocity) < 1 && nextPlayerState.y <= GROUND_HEIGHT && !nextPlayerState.isNaked && nextPlayerState.health < maxHealth;
@@ -810,98 +577,15 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
           nextPlayerState.xVelocity = 0;
         }
         
-        if (currentEvent === 'thunderstorm') {
-            // Balance spawn rate based on screen width to ensure consistent difficulty.
-            const baseLightningSpawnRate = 1.5; // Strikes per second on an 800px wide screen.
-            const widthRatio = gameDimensions.width / 800;
-            const currentLightningSpawnRate = baseLightningSpawnRate * widthRatio;
+        const eventResult = updateEvents({ currentEvent, deltaTime, gameDimensions, currentFrameTime, windDirection }, lightningStrikes, burningPatches);
 
-            if (Math.random() < deltaTime * currentLightningSpawnRate) {
-                nextLightningStrikes.push({
-                    id: currentFrameTime,
-                    x: Math.random() * (gameDimensions.width - 50),
-                    width: 40 + Math.random() * 20,
-                    warningStartTime: currentFrameTime,
-                    strikeTime: currentFrameTime + 1200,
-                });
-            }
-            if (Math.random() < deltaTime * 0.3) {
-                playThunderSound();
-            }
-        } else if (currentEvent === 'earthquake') {
-            const shakeIntensity = 4;
-            nextScreenShake = { x: (Math.random() - 0.5) * shakeIntensity, y: (Math.random() - 0.5) * shakeIntensity };
-            if (particles.length + particlesToCreate.length < MAX_PARTICLES && Math.random() < deltaTime * 20) {
-                particlesToCreate.push({
-                    id: Math.random(),
-                    x: Math.random() * gameDimensions.width,
-                    y: GAME_HEIGHT - GROUND_HEIGHT + 10,
-                    xVelocity: (Math.random() - 0.5) * 30,
-                    yVelocity: -Math.random() * 60,
-                    size: 2 + Math.random() * 4,
-                    color: 'rgba(160, 120, 90, 0.6)',
-                    lifespan: 0.5 + Math.random() * 0.8,
-                    type: 'dust',
-                });
-            }
-        } else if (currentEvent === 'blizzard') {
-            // Spawn dense, swirling snowflakes
-            if (particles.length + particlesToCreate.length < MAX_PARTICLES && Math.random() < deltaTime * 900) { // Increased density
-                particlesToCreate.push({
-                    id: Math.random(),
-                    x: Math.random() * gameDimensions.width,
-                    y: -10,
-                    xVelocity: (Math.random() - 0.5) * 40, // Gentle, random initial horizontal drift
-                    yVelocity: 40 + Math.random() * 30,  // Slower fall speed
-                    size: 2 + Math.random() * 4, // Bigger flakes
-                    color: `rgba(255, 255, 255, ${0.6 + Math.random() * 0.3})`, // Varying opacity
-                    lifespan: 6 + Math.random() * 4, // Longer lifespan to fill the screen
-                    type: 'water', // These will be our snowflakes
-                });
-            }
-            // Spawn fast wind streaks
-            if (particles.length + particlesToCreate.length < MAX_PARTICLES && Math.random() < deltaTime * 20) {
-                particlesToCreate.push({
-                    id: Math.random(),
-                    x: gameDimensions.width + 20,
-                    y: Math.random() * GAME_HEIGHT,
-                    xVelocity: -800 - Math.random() * 300, // Fast horizontal streaks
-                    yVelocity: (Math.random() - 0.5) * 20,
-                    size: 1 + Math.random(), // Thin streaks
-                    color: 'rgba(255, 255, 255, 0.4)',
-                    lifespan: 0.8 + Math.random() * 0.5,
-                    type: 'dust', // Re-use the streak drawing logic
-                });
-            }
-        } else if (currentEvent === 'storm') {
-            // New wind streak particles
-            if (particles.length + particlesToCreate.length < MAX_PARTICLES && Math.random() < deltaTime * 80) { // Increased spawn rate
-                 particlesToCreate.push({
-                    id: Math.random(),
-                    x: windDirection === 'left' ? gameDimensions.width + 20 : -20,
-                    y: Math.random() * (GAME_HEIGHT - GROUND_HEIGHT),
-                    xVelocity: windDirection === 'left' ? -700 - Math.random() * 400 : 700 + Math.random() * 400, // much faster
-                    yVelocity: (Math.random() - 0.5) * 30, // less vertical drift
-                    size: 1 + Math.random() * 2, // will be used for line width
-                    color: 'rgba(255, 255, 255, 0.6)', // misty white
-                    lifespan: 0.6 + Math.random() * 0.6, // shorter lifespan
-                    type: 'dust',
-                });
-            }
+        nextScreenShake = eventResult.screenShake;
+        if (eventResult.newParticles.length > 0) {
+            particlesToCreate.push(...eventResult.newParticles);
         }
 
-        if (season === 'autumn' && particles.length + particlesToCreate.length < MAX_PARTICLES && Math.random() < deltaTime * 10) {
-            particlesToCreate.push({
-                id: Math.random(),
-                x: Math.random() * gameDimensions.width,
-                y: -10,
-                xVelocity: 20 - Math.random() * 40,
-                yVelocity: 50 + Math.random() * 20,
-                size: 8 + Math.random() * 4,
-                color: ['#d97706', '#f59e0b', '#b45309'][Math.floor(Math.random() * 3)],
-                lifespan: 10,
-                type: 'leaf',
-            });
+        if (particles.length + particlesToCreate.length < MAX_PARTICLES) {
+            particlesToCreate.push(...createSeasonalParticles(season, gameDimensions.width, deltaTime));
         }
 
         const widthRatio = gameDimensions.width / 800;
@@ -1031,7 +715,9 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
                         if (el.type === 'meteor') playMeteorImpactSound();
                         else playImpactSound(el.size);
 
-                        createRockParticles(el, isGolden);
+                        if (particles.length + particlesToCreate.length < MAX_PARTICLES) {
+                            particlesToCreate.push(...createRockParticles(el, isGolden));
+                        }
                         
                         const blocked = blockChance > 0 && Math.random() < blockChance;
                 
@@ -1093,7 +779,9 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
                     }
                 } else if (el.type === 'water' || el.type === 'snow') {
                   playWaterCollectSound();
-                  createWaterSplashParticles({x: el.x, y: el.y, size: el.size});
+                  if (particles.length + particlesToCreate.length < MAX_PARTICLES) {
+                      particlesToCreate.push(...createWaterSplashParticles({x: el.x, y: el.y, size: el.size}));
+                  }
                   let baseHeal = WATER_HEAL_AMOUNT;
                   if (season === 'summer') baseHeal *= 0.5;
                   if (season === 'autumn') baseHeal *= 1.5;
@@ -1142,10 +830,14 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
                 } else {
                     playImpactSound(el.size);
                 }
-                createRockParticles({ ...newEl, y: GAME_HEIGHT - GROUND_HEIGHT - newEl.size });
+                if (particles.length + particlesToCreate.length < MAX_PARTICLES) {
+                    particlesToCreate.push(...createRockParticles({ ...newEl, y: GAME_HEIGHT - GROUND_HEIGHT - newEl.size }));
+                }
           } else if (hitGround && (el.type === 'water' || el.type === 'snow')) {
              const splashY = el.type === 'water' ? GAME_HEIGHT - GROUND_HEIGHT : GAME_HEIGHT - GROUND_HEIGHT - newEl.size;
-             createWaterSplashParticles({ x: newEl.x, y: splashY, size: newEl.size });
+             if (particles.length + particlesToCreate.length < MAX_PARTICLES) {
+                particlesToCreate.push(...createWaterSplashParticles({ x: newEl.x, y: splashY, size: newEl.size }));
+             }
           }
         }
         
@@ -1246,13 +938,7 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
         }
 
         const nextParticles = [
-            ...particles.map(p => ({
-                ...p,
-                x: p.x + p.xVelocity * deltaTime,
-                y: p.y + p.yVelocity * deltaTime,
-                yVelocity: p.yVelocity + (p.type === 'rock' || p.type === 'dust' ? GRAVITY * 0.8 * deltaTime : 0),
-                lifespan: p.lifespan - deltaTime,
-            })).filter(p => p.lifespan > 0),
+            ...updateParticles(particles, deltaTime),
             ...particlesToCreate
         ];
         
@@ -1298,132 +984,30 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
     // --- Render Logic ---
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    
-    ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform to identity matrix
-    ctx.clearRect(0, 0, clientWidth, clientHeight);
-    
-    // Apply global scaling and transformations
-    ctx.save();
-    ctx.translate(renderContext.current.offsetX, renderContext.current.offsetY);
-    ctx.scale(renderContext.current.scale, renderContext.current.scale);
-    ctx.translate(screenShake.x, screenShake.y);
-    
-    // Draw Background
-    let bgColor = { from: '#87CEEB', to: '#4682B4' };
-    if (season === 'summer') bgColor = { from: '#fca5a5', to: '#f97316' };
-    if (season === 'autumn') bgColor = { from: '#fde68a', to: '#fb923c' };
-    if (season === 'winter') bgColor = { from: '#e0f2fe', to: '#bae6fd' };
-    if (currentEvent === 'thunderstorm' || currentEvent === 'storm') bgColor = { from: '#4b5563', to: '#1f2937' };
-    if (currentEvent === 'meteorShower') bgColor = { from: '#1e1b4b', to: '#0c0a09'};
-    const gradient = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
-    gradient.addColorStop(0, bgColor.from);
-    gradient.addColorStop(1, bgColor.to);
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, gameDimensions.width, GAME_HEIGHT);
-    
-    // Draw clouds
-    clouds.forEach(cloud => {
-        ctx.fillStyle = cloud.isStormCloud ? 'rgba(50, 50, 70, 0.7)' : 'rgba(255, 255, 255, 0.7)';
-        ctx.beginPath();
-        ctx.ellipse(cloud.x + cloud.width / 2, cloud.y, cloud.width / 2, cloud.height / 2, 0, 0, 2 * Math.PI);
-        ctx.fill();
-    });
 
-    // Draw fog for blizzard
-    if (currentEvent === 'blizzard') {
-        const fogGradient = ctx.createLinearGradient(0, GAME_HEIGHT, 0, GAME_HEIGHT - GROUND_HEIGHT - 150);
-        fogGradient.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
-        fogGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        ctx.fillStyle = fogGradient;
-        ctx.fillRect(0, 0, gameDimensions.width, GAME_HEIGHT);
-    }
-    
-    drawGround(ctx, season, currentEvent, gameDimensions.width, burningPatches, timeInMonth);
-    
-    // Draw elements
-    gameState.elements.forEach(el => drawRainingElement(ctx, el, season));
-    
-    // Draw particles
-    particles.forEach(p => {
-        if (p.type === 'leaf') {
-             ctx.save();
-             ctx.translate(p.x, p.y);
-             ctx.fillStyle = p.color;
-             ctx.globalAlpha = Math.max(0, p.lifespan / 2);
-             ctx.beginPath();
-             ctx.ellipse(0, 0, p.size / 2, p.size * 0.35, 0, 0, 2*Math.PI);
-             ctx.fill();
-             ctx.restore();
-        } else if (p.type === 'dust') {
-             ctx.fillStyle = p.color;
-             ctx.globalAlpha = Math.max(0, p.lifespan);
-             ctx.fillRect(p.x, p.y, p.size * 5, p.size / 3);
-             ctx.globalAlpha = 1;
-        } else {
-             ctx.fillStyle = p.color;
-             ctx.globalAlpha = Math.max(0, p.lifespan);
-             ctx.beginPath();
-             ctx.arc(p.x, p.y, p.size, 0, 2 * Math.PI);
-             ctx.fill();
-             ctx.globalAlpha = 1;
-        }
-    });
-
-    if (gameStatus === 'playing') {
-        drawPlayer(ctx, gameState.player, shellBreakAnimation, character, maxHealth, shellReformAnimation);
-    }
-    
-    // Draw floating scores and texts
-    ctx.font = 'bold 20px "Press Start 2P", monospace';
-    floatingScores.forEach(fs => {
-        ctx.globalAlpha = fs.lifespan;
-        ctx.fillStyle = fs.isGolden ? '#fef08a' : '#ffffff';
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 4;
-        const text = `+${fs.amount}`;
-        const textWidth = ctx.measureText(text).width;
-        ctx.strokeText(text, fs.x - textWidth / 2, fs.y);
-        ctx.fillText(text, fs.x - textWidth / 2, fs.y);
-    });
-    
-    ctx.font = 'bold 24px "Press Start 2P", monospace';
-    floatingTexts.forEach(ft => {
-        ctx.globalAlpha = ft.lifespan;
-        ctx.fillStyle = ft.color;
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 4;
-        const textWidth = ctx.measureText(ft.text).width;
-        ctx.strokeText(ft.text, ft.x - textWidth / 2, ft.y);
-        ctx.fillText(ft.text, ft.x - textWidth / 2, ft.y);
-    });
-
-    ctx.globalAlpha = 1;
-    ctx.lineWidth = 1;
-
-    // Draw lightning strikes
-    if (currentEvent === 'thunderstorm') {
-        lightningStrikes.forEach(strike => {
-            const timeSinceWarning = currentFrameTime - strike.warningStartTime;
-            if (timeSinceWarning > 0 && !strike.hasStruck) {
-                // Warning indicator
-                const warningOpacity = Math.min(0.5, timeSinceWarning / 1000);
-                ctx.fillStyle = `rgba(255, 255, 100, ${warningOpacity})`;
-                ctx.fillRect(strike.x, 0, strike.width, GAME_HEIGHT - GROUND_HEIGHT);
-            }
-            if (strike.hasStruck) {
-                // Actual strike
-                ctx.fillStyle = 'white';
-                ctx.fillRect(strike.x, 0, strike.width, GAME_HEIGHT - GROUND_HEIGHT);
-            }
-        });
-    }
-
-    if (screenFlash > 0) {
-        ctx.fillStyle = `rgba(255, 255, 255, ${screenFlash})`;
-        ctx.fillRect(0, 0, gameDimensions.width, GAME_HEIGHT);
-    }
-
-    ctx.restore(); // Restore from global scaling
+    drawGame(
+        ctx,
+        renderContext.current,
+        screenShake,
+        season,
+        currentEvent,
+        gameDimensions,
+        clouds,
+        burningPatches,
+        timeInMonth,
+        gameState,
+        particles,
+        gameStatus,
+        shellBreakAnimation,
+        character,
+        maxHealth,
+        shellReformAnimation,
+        floatingScores,
+        floatingTexts,
+        lightningStrikes,
+        screenFlash,
+        currentFrameTime
+    );
 
   }, [
     canvasRef, gameDimensions, gameStatus, gameState, particles, floatingScores, floatingTexts, timeInMonth, playerSlowTimer,

@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Skill, Season, HighScoreEntry, SubmissionResult, CharacterId, GameStatus, PlayerState } from '../types';
-import { MAX_PLAYER_SPEED, GAME_VERSION, ARCHIVED_GAME_VERSIONS } from '../constants';
+import { MAX_PLAYER_SPEED } from '../constants';
 import { loadPlayerName } from '../utils/storage';
-import { assetManager } from '../game/assets';
-// FIX: Corrected import path for characters module.
 import { CHARACTERS, getCharacterById } from '../game/characters/index';
 
 interface GameUIProps {
@@ -143,6 +141,10 @@ const StartMenu: React.FC<{ onStart: () => void; onShowHighScores: () => void; o
                 <div className="flex flex-col space-y-4">
                     <BigButton onClick={onStart} disabled={!assetsReady} className={GREEN_BUTTON_CLASSES}>
                         {assetsReady ? 'Start Game' : 'Loading...'}
+                    </BigButton>
+                    <BigButton 
+                        onClick={onShowDebug} disabled={!assetsReady} className={GREEN_BUTTON_CLASSES}>
+                        {assetsReady ? 'Debug Game' : 'Loading...'}
                     </BigButton>
                     <BigButton onClick={onShowCharacterSelect} disabled={!assetsReady} className={GRAY_BUTTON_CLASSES}>
                         {assetsReady ? 'Change Character' : 'Loading...'}
