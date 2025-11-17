@@ -1,0 +1,17 @@
+{
+  "name": "pistachio-leaderboard-backend",
+  "version": "1.0.0",
+  "description": "Secure leaderboard backend for the Pistachio game.",
+  "main": "index.js",
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "^7.8.0",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "firebase-admin": "^12.1.1",
+    "firebase-functions": "^5.0.1",
+    "uuid": "^9.0.1"
+  }
+}
