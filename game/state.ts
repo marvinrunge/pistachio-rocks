@@ -2,13 +2,13 @@ import type { PlayerState, CloudState, CharacterId } from '../types';
 import { PLAYER_WIDTH, GROUND_HEIGHT } from '../constants';
 
 export const getInitialPlayerState = (characterId: CharacterId): PlayerState => ({
-  x: 800 / 2 - PLAYER_WIDTH / 2,
-  y: GROUND_HEIGHT,
-  yVelocity: 0,
-  xVelocity: 0,
-  health: 0,
-  isNaked: true,
-  characterId,
+    x: 800 / 2 - PLAYER_WIDTH / 2,
+    y: GROUND_HEIGHT,
+    yVelocity: 0,
+    xVelocity: 0,
+    health: 0,
+    isNaked: true,
+    characterId,
 });
 
 export const generateInitialClouds = (width: number): CloudState[] => {

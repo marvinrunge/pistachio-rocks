@@ -101,6 +101,11 @@ export type ParticleState = {
   type: 'rock' | 'water' | 'dust' | 'leaf';
 };
 
+export type GameDimensions = {
+  width: number;
+  height: number;
+};
+
 export type LightningStrike = {
   id: number;
   x: number;
@@ -111,10 +116,10 @@ export type LightningStrike = {
 };
 
 export type BurningPatchState = {
-    id: number;
-    x: number;
-    width: number;
-    lifespan: number;
+  id: number;
+  x: number;
+  width: number;
+  lifespan: number;
 };
 
 export type FloatingTextState = {
