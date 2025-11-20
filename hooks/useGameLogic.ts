@@ -41,6 +41,7 @@ import { usePlayerPhysics } from './usePlayerPhysics';
 import { useCollisionSystem } from './useCollisionSystem';
 import { useGameElements } from './useGameElements';
 import { useEventSystem } from './useEventSystem';
+import { useSkillSystem } from './useSkillSystem';
 import { updateEvents, getIncomingEventTitle } from '../game/eventLogic';
 
 interface UseGameLogicProps {
@@ -141,6 +142,30 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
     const renderContext = useRef({ scale: 1, offsetX: 0, offsetY: 0 });
     const gameSessionIdRef = useRef<string | null>(null);
 
+    const { handleLevelUp, handleSkillSelect, simulateSkillsForDebug } = useSkillSystem({
+        monthCounter,
+        difficultyLevel,
+        availableSkills,
+        setDifficultyLevel,
+        setGameStatus,
+        setAvailableSkills,
+        setAcquiredSkills,
+        setIncomingEventTitle,
+        setMonthCounter,
+        setTimeInMonth,
+        setMaxHealth,
+        setMaxSpeed,
+        setBonusHeal,
+        setWaterSpawnInterval,
+        setExtraLives,
+        setBlockChance,
+        setPhotosynthesisLevel,
+        setGoldenTouchChance,
+        clearEventEffects,
+        resetGameInput,
+        lastFrameTimeRef: lastFrameTime
+    });
+
     // Load assets on initial mount
     useEffect(() => {
         assetManager.loadAssets().then(() => {
@@ -185,38 +210,6 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
         lastFrameTime.current = now;
     };
 
-
-
-    const handleLevelUp = useCallback(() => {
-        // FIX: Reset touch and keyboard states to prevent unwanted movement after skill selection.
-        resetGameInput();
-
-        setIncomingEventTitle(null);
-        const eventJustEnded = (monthCounter - 1) % 3 === 2;
-
-        clearEventEffects();
-
-        const newLevel = difficultyLevel + 1;
-        setDifficultyLevel(newLevel);
-
-        setGameStatus('levelUp');
-
-        if (eventJustEnded) {
-            // At the end of month 12, 24, 36, etc., offer a powerful yearly skill.
-            if (monthCounter > 0 && monthCounter % 12 === 0) {
-                const shuffled = [...YEARLY_SKILL_POOL].sort(() => 0.5 - Math.random());
-                setAvailableSkills(shuffled.slice(0, 3));
-            } else {
-                // At the end of other event months (3, 6, 9, 15...), offer a special event skill.
-                const shuffled = [...EVENT_SKILL_POOL].sort(() => 0.5 - Math.random());
-                setAvailableSkills(shuffled.slice(0, 3));
-            }
-        } else {
-            // For all other months, offer a standard permanent skill.
-            const shuffled = [...PERMANENT_SKILL_POOL].sort(() => 0.5 - Math.random());
-            setAvailableSkills(shuffled.slice(0, 3));
-        }
-    }, [difficultyLevel, monthCounter, clearEventEffects]);
 
     const { checkCollisions } = useCollisionSystem({
         character,
@@ -323,103 +316,11 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
         setGameStatus('start');
     };
 
-    // FIX: Added missing startDebugGame function.
-    const startDebugGame = (year: number, month: number) => {
-        startGame();
-        const totalMonths = year * 12 + month;
-        setDifficultyLevel(totalMonths + 1);
-        setMonthCounter(totalMonths + 1);
-
-        // Simulate skill acquisition for the skipped months
-        for (let i = 1; i <= totalMonths; i++) {
-            let pool = PERMANENT_SKILL_POOL;
-            // Logic matches handleLevelUp:
-            // Month 12, 24, 36... -> Yearly Skill
-            // Month 3, 6, 9, 15... -> Event Skill
-            // Others -> Permanent Skill
-            if (i % 12 === 0) {
-                pool = YEARLY_SKILL_POOL;
-            } else if (i % 3 === 0) {
-                pool = EVENT_SKILL_POOL;
-            }
-
-            const skill = pool[Math.floor(Math.random() * pool.length)];
-
-            setAcquiredSkills(prev => [...prev, skill]);
-
-            switch (skill.id) {
-                case 'shellFortification':
-                    setMaxHealth(prev => prev + 5);
-                    break;
-                case 'increasedAgility':
-                    setMaxSpeed(prev => prev + 40);
-                    break;
-                case 'waterAffinity':
-                    setBonusHeal(prev => prev + 1);
-                    break;
-                case 'soothingRains':
-                    setWaterSpawnInterval(prev => prev * 0.9);
-                    break;
-                case 'extraLife':
-                    setExtraLives(prev => prev + 1);
-                    break;
-                case 'blockChance':
-                    setBlockChance(prev => Math.min(prev + 0.1, 0.9));
-                    break;
-                case 'photosynthesis':
-                    setPhotosynthesisLevel(prev => prev + 1);
-                    break;
-                case 'goldenTouch':
-                    setGoldenTouchChance(prev => prev + GOLDEN_TOUCH_CHANCE_INCREASE);
-                    break;
-            }
-        }
-    };
-
     const handleBackToMenu = () => {
         setLastSubmissionResult(null);
         setGameStatus('start');
     };
 
-
-    const handleSkillSelect = (skillId: string) => {
-        const selectedSkill = availableSkills.find(s => s.id === skillId);
-        if (selectedSkill) {
-            setAcquiredSkills(prev => [...prev, selectedSkill]);
-        }
-
-        switch (skillId) {
-            case 'shellFortification':
-                setMaxHealth(prev => prev + 5);
-                break;
-            case 'increasedAgility':
-                setMaxSpeed(prev => prev + 40);
-                break;
-            case 'waterAffinity':
-                setBonusHeal(prev => prev + 1);
-                break;
-            case 'soothingRains':
-                setWaterSpawnInterval(prev => prev * 0.9);
-                break;
-            case 'extraLife':
-                setExtraLives(prev => prev + 1);
-                break;
-            case 'blockChance':
-                setBlockChance(prev => Math.min(prev + 0.1, 0.9));
-                break;
-            case 'photosynthesis':
-                setPhotosynthesisLevel(prev => prev + 1);
-                break;
-            case 'goldenTouch':
-                setGoldenTouchChance(prev => prev + GOLDEN_TOUCH_CHANCE_INCREASE);
-                break;
-        }
-
-        setMonthCounter(prev => prev + 1);
-        setTimeInMonth(0);
-        setGameStatus('playing');
-        lastFrameTime.current = performance.now();
-    };
 
     const gameLoop = useCallback((currentTime: number) => {
         const canvas = canvasRef.current;
@@ -773,6 +674,15 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
             }
         };
     }, [gameStatus, gameLoop, assetsReady]);
+
+    // Wrapper for startDebugGame that uses the skill system hook
+    const startDebugGame = (year: number, month: number) => {
+        startGame();
+        const totalMonths = year * 12 + month;
+        setDifficultyLevel(totalMonths + 1);
+        setMonthCounter(totalMonths + 1);
+        simulateSkillsForDebug(totalMonths);
+    };
 
     // FIX: Added a return statement to export state and handlers to the App component.
     return {
