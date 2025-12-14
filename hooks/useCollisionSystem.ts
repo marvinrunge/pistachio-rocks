@@ -1,5 +1,5 @@
 import { useCallback, Dispatch, SetStateAction } from 'react';
-import type { PlayerState, ElementState, ParticleState, FloatingScoreState, FloatingTextState, ShellBreakAnimationState, ShellPieceState } from '../types';
+import type { PlayerState, ElementState, ParticleState, FloatingScoreState, FloatingTextState, ShellBreakAnimationState, ShellPieceState, ShellReformAnimationState } from '../types';
 import {
     GAME_HEIGHT,
     PLAYER_WIDTH,
@@ -32,6 +32,7 @@ interface UseCollisionSystemProps {
     season: string;
     setExtraLives: Dispatch<SetStateAction<number>>;
     setShellBreakAnimation: Dispatch<SetStateAction<ShellBreakAnimationState | null>>;
+    setShellReformAnimation: Dispatch<SetStateAction<ShellReformAnimationState | null>>;
     handleGameOver: () => void;
 }
 
@@ -45,6 +46,7 @@ export const useCollisionSystem = ({
     season,
     setExtraLives,
     setShellBreakAnimation,
+    setShellReformAnimation,
     handleGameOver,
 }: UseCollisionSystemProps) => {
 
@@ -222,6 +224,7 @@ export const useCollisionSystem = ({
                         // Restore shell if player was naked and now has health
                         if (nextPlayer.isNaked && newHealth > 0) {
                             nextPlayer.isNaked = false;
+                            setShellReformAnimation({ progress: 0, duration: 0.5 });
                         }
                     }
                 }

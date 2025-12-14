@@ -230,6 +230,7 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
         season,
         setExtraLives,
         setShellBreakAnimation,
+        setShellReformAnimation,
         handleGameOver,
     });
 
