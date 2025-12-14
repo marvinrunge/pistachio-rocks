@@ -116,7 +116,7 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
         setGameStatus('enteringName');
     };
 
-    const { processLightningStrikes, processBurningPatches, addBurningPatch, clearEventEffects, updateEventState } = useEventSystem({
+    const { processLightningStrikes, processBurningPatches, clearEventEffects, updateEventState } = useEventSystem({
         monthCounter,
         gameStatus,
         gameDimensions,
@@ -397,6 +397,7 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
             let shouldClearShellAnimation = false;
             let nextLightningStrikes: LightningStrike[] = [];
             let nextBurningPatches: BurningPatchState[] = [];
+            const patchesAddedThisFrame: BurningPatchState[] = [];
 
             if (shellBreakAnimation) {
                 const nextAnimationState = JSON.parse(JSON.stringify(shellBreakAnimation));
@@ -562,7 +563,13 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
                     if (el.type === 'rock' || el.type === 'meteor') {
                         if (el.type === 'meteor') {
                             playMeteorImpactSound();
-                            addBurningPatch(el.x, el.size);
+                            // addBurningPatch(el.x, el.size);
+                            patchesAddedThisFrame.push({
+                                id: Date.now() + Math.random(),
+                                x: el.x - 10,
+                                width: el.size + 20,
+                                lifespan: 3.0
+                            });
                         } else {
                             playImpactSound(el.size);
                         }
@@ -622,13 +629,16 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
             setFloatingTexts(nextFloatingTexts);
             setTimeInMonth(nextTimeInMonth);
             setPlayerSlowTimer(newPlayerSlowTimer);
-            setLightningStrikes(nextLightningStrikes);
-            setBurningPatches(nextBurningPatches);
-            setScreenFlash(screenFlashOpacity);
-            setScreenShake(nextScreenShake);
             if (rocksHitThisFrame > 0) {
                 setRocksDestroyed(prev => prev + rocksHitThisFrame);
             }
+
+            // Append new patches synchronously
+            nextBurningPatches.push(...patchesAddedThisFrame);
+
+            setLightningStrikes(nextLightningStrikes);
+            setBurningPatches(nextBurningPatches);
+
             if (shouldClearShellAnimation) {
                 setShellBreakAnimation(null);
             }
