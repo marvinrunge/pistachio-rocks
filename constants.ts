@@ -33,6 +33,10 @@ export const INITIAL_WATER_SPAWN_INTERVAL = 2500; // ms
 export const WATER_DROP_SIZE = 15;
 export const WATER_HEAL_AMOUNT = 2;
 
+// Quest Targets
+export const RAIN_DANCER_TARGET = 20;
+export const ROCK_BREAKER_TARGET = 50;
+
 // Legendary Skill Properties
 export const GOLDEN_TOUCH_CHANCE_INCREASE = 0.05; // 5% chance per level
 

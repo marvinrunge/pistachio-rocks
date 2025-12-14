@@ -1,11 +1,12 @@
-import { useState, useCallback, Dispatch, SetStateAction } from 'react';
+import { useState, useCallback, Dispatch, SetStateAction, useRef } from 'react';
 import type { QuestState, QuestType, QuestNotification } from '../types';
 import { playQuestCompleteSound } from '../utils/audio';
-import { WATER_HEAL_AMOUNT } from '../constants';
+import { WATER_HEAL_AMOUNT, RAIN_DANCER_TARGET, ROCK_BREAKER_TARGET } from '../constants';
 
 interface UseQuestSystemProps {
     setNotifications: Dispatch<SetStateAction<QuestNotification[]>>;
     spawnHealingFountain: (amount: number) => void;
+    armSeismicSlam: () => void;
 }
 
 const INITIAL_QUESTS: QuestState[] = [
@@ -13,65 +14,71 @@ const INITIAL_QUESTS: QuestState[] = [
         id: 'rainDancer',
         title: 'Rain Dancer',
         progress: 0,
-        target: 20,
+        target: RAIN_DANCER_TARGET,
+        level: 1,
+        isCompleted: false
+    },
+    {
+        id: 'rockBreaker',
+        title: 'Rock Breaker',
+        progress: 0,
+        target: ROCK_BREAKER_TARGET,
         level: 1,
         isCompleted: false
     }
 ];
 
-export const useQuestSystem = ({ setNotifications, spawnHealingFountain }: UseQuestSystemProps) => {
+export const useQuestSystem = ({ setNotifications, spawnHealingFountain, armSeismicSlam }: UseQuestSystemProps) => {
     const [quests, setQuests] = useState<QuestState[]>(INITIAL_QUESTS);
+    const questsRef = useRef<QuestState[]>(INITIAL_QUESTS);
 
     const checkQuestProgress = useCallback((questId: QuestType, amount: number = 1) => {
-        setQuests(prevQuests => {
-            return prevQuests.map(quest => {
-                if (quest.id !== questId) return quest;
+        const currentQuests = questsRef.current;
+        const questIndex = currentQuests.findIndex(q => q.id === questId);
 
-                const newProgress = quest.progress + amount;
+        if (questIndex === -1) return;
 
-                if (newProgress >= quest.target) {
-                    // Quest Completed
-                    playQuestCompleteSound();
+        const quest = currentQuests[questIndex];
+        const newProgress = quest.progress + amount;
+        const updatedQuests = [...currentQuests];
 
-                    // Trigger reward
-                    if (questId === 'rainDancer') {
-                        spawnHealingFountain(quest.target);
-                    }
+        if (newProgress >= quest.target) {
+            // Quest Completed
+            playQuestCompleteSound();
 
-                    const notificationId = Date.now();
-                    setNotifications(prev => [...prev, {
-                        id: notificationId,
-                        questTitle: quest.title,
-                        level: quest.level,
-                        lifespan: 3.0
-                    }]);
+            // Trigger reward
+            if (questId === 'rainDancer') {
+                spawnHealingFountain(quest.target);
+            } else if (questId === 'rockBreaker') {
+                armSeismicSlam();
+            }
 
-                    setTimeout(() => {
-                        setNotifications(prev => prev.filter(n => n.id !== notificationId));
-                    }, 3000);
+            const notificationId = Date.now() + Math.random();
+            setNotifications(prev => [...prev, {
+                id: notificationId,
+                questTitle: quest.title,
+                level: quest.level,
+                lifespan: 3.0
+            }]);
 
-                    // Level up quest (Target * 2)
-                    return {
-                        ...quest,
-                        progress: 0, // Reset progress or keep excess? "collecting 25" implies cumulative, but "level up" usually implies next tier.
-                        // Let's reset progress to 0 for the next tier of 40. 
-                        // Wait, user said "multiply with 2 for each lvl". 
-                        // If I collect 20, next is 40. 
-                        // I should keep the total collected? Or reset counters?
-                        // Standard patterns: 
-                        // 1. Cumulative: 20/20 -> 21/40.
-                        // 2. Tiered: 20/20 -> 0/40.
-                        // Implementation plan didn't specify, but Tiered is usually cleaner for "Quests". 
-                        // Let's go with Tiered (0/40) for now as it makes the "Target" clear.
-                        target: quest.target * 2,
-                        level: quest.level + 1
-                    };
-                }
+            setTimeout(() => {
+                setNotifications(prev => prev.filter(n => n.id !== notificationId));
+            }, 3000);
 
-                return { ...quest, progress: newProgress };
-            });
-        });
-    }, [setNotifications, spawnHealingFountain]);
+            // Level up quest (Target * 2)
+            updatedQuests[questIndex] = {
+                ...quest,
+                progress: 0,
+                target: quest.target * 2,
+                level: quest.level + 1
+            };
+        } else {
+            updatedQuests[questIndex] = { ...quest, progress: newProgress };
+        }
+
+        questsRef.current = updatedQuests;
+        setQuests(updatedQuests);
+    }, [setNotifications, spawnHealingFountain, armSeismicSlam]);
 
     return {
         quests,

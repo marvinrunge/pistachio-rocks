@@ -397,6 +397,38 @@ export function drawGame(
 
     if (gameStatus === 'playing') {
         drawPlayer(ctx, gameState.player, shellBreakAnimation, character, maxHealth, shellReformAnimation);
+
+        // Draw Seismic Slam Indicator (Electric Sparks)
+        if (gameState.player.seismicSlamReady) {
+            ctx.save();
+            ctx.translate(gameState.player.x + PLAYER_WIDTH / 2, GAME_HEIGHT - gameState.player.y - PLAYER_HEIGHT / 2);
+
+            const time = Date.now() / 100;
+            const radius = 60;
+
+            ctx.strokeStyle = '#fef08a'; // Yellow
+            ctx.lineWidth = 2;
+            ctx.shadowColor = '#fbbf24';
+            ctx.shadowBlur = 10;
+
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                const offset = (i * Math.PI * 2 / 3) + time;
+                let angle = offset;
+                let r = radius + Math.sin(time * 5 + i) * 5;
+                ctx.moveTo(Math.cos(angle) * r, Math.sin(angle) * r);
+
+                for (let j = 0; j < 10; j++) {
+                    angle += 0.2;
+                    // Jagged line
+                    r = radius + (Math.random() - 0.5) * 20;
+                    ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+                }
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        }
     }
 
     // Draw floating scores and texts

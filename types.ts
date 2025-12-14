@@ -11,6 +11,7 @@ export type PlayerState = {
   health: number;
   isNaked: boolean;
   characterId: CharacterId;
+  seismicSlamReady?: boolean;
 };
 
 export type ElementType = 'rock' | 'water' | 'snow' | 'meteor';
@@ -149,7 +150,7 @@ export type FloatingScoreState = {
   isGolden: boolean;
 };
 
-export type QuestType = 'rainDancer' | 'geologist';
+export type QuestType = 'rainDancer' | 'geologist' | 'rockBreaker';
 
 export type QuestState = {
   id: QuestType;

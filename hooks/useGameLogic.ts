@@ -143,6 +143,8 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
     const lastFrameTime = useRef<number>(performance.now());
     const audioInitialized = useRef(false);
     const standStillTimer = useRef(0);
+    const seismicShakeTimerRef = useRef(0);
+    const seismicSlamTriggeredRef = useRef(false);
     const renderContext = useRef({ scale: 1, offsetX: 0, offsetY: 0 });
     const gameSessionIdRef = useRef<string | null>(null);
     const gameStateRef = useRef(gameState);
@@ -182,11 +184,21 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
         });
     }, []);
 
+    const armSeismicSlam = useCallback(() => {
+        setGameState(prev => ({
+            ...prev,
+            player: { ...prev.player, seismicSlamReady: true }
+        }));
+        // Use ref to signal inside game loop if it happens mid-frame or just to be safe
+        seismicSlamTriggeredRef.current = true;
+    }, [setGameState]);
+
 
 
     const { checkQuestProgress } = useQuestSystem({
         setNotifications: setQuestNotifications,
-        spawnHealingFountain
+        spawnHealingFountain,
+        armSeismicSlam
     });
 
     const { handleLevelUp, handleSkillSelect, simulateSkillsForDebug } = useSkillSystem({
@@ -425,7 +437,18 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
                 setIncomingEventTitle(newIncomingEventTitle);
             }
 
+            if (newIncomingEventTitle !== incomingEventTitle) {
+                setIncomingEventTitle(newIncomingEventTitle);
+            }
+
             let nextPlayerState = { ...gameState.player };
+
+            // Apply any pending triggers from refs (fixes race condition where quest completion update is overwritten)
+            if (seismicSlamTriggeredRef.current) {
+                nextPlayerState.seismicSlamReady = true;
+                seismicSlamTriggeredRef.current = false;
+            }
+
             let nextElements = [...gameState.elements];
             let scoreGained = 0;
             let rocksHitThisFrame = 0;
@@ -561,13 +584,57 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
             }
 
             // 1. Update element positions
-            const movedElements = updateGameElements(nextElements, deltaTime);
+            let movedElements = updateGameElements(nextElements, deltaTime);
+
+
+            // 1.5 SEISMIC SLAM CHECK (Must happen before collisions to prevent death by rock on landing)
+            let rocksHitBySlam = 0;
+            if (nextPlayerState.seismicSlamReady && nextPlayerState.y <= GROUND_HEIGHT) {
+                const wasInAir = gameState.player.y > GROUND_HEIGHT;
+                const isOnGround = nextPlayerState.y <= GROUND_HEIGHT;
+
+                if (wasInAir && isOnGround) {
+                    // TRIGGER SEISMIC SLAM
+                    nextPlayerState.seismicSlamReady = false;
+                    playSeismicSlamSound();
+                    setScreenShake({ x: 0, y: 15 }); // Initial shake
+                    seismicShakeTimerRef.current = 3.0; // 3 seconds
+
+                    const rocksToDestroy: number[] = [];
+
+                    movedElements.forEach((el, index) => {
+                        if (el.type === 'rock') {
+                            rocksToDestroy.push(el.id); // Use ID or just filter
+                            scoreGained += 10;
+                            rocksHitBySlam += 1;
+
+                            if (particles.length + particlesToCreate.length < MAX_PARTICLES) {
+                                particlesToCreate.push(...createRockParticles({ ...el, y: GAME_HEIGHT - el.y - el.size }));
+                            }
+
+                            floatingScoresToCreate.push({
+                                id: Date.now() + Math.random(), // Unique ID
+                                x: el.x,
+                                y: GAME_HEIGHT - el.y,
+                                amount: 10,
+                                lifespan: 1.0,
+                                isGolden: false
+                            });
+                        }
+                    });
+
+                    // Remove rocks from movedElements so they don't collision check
+                    movedElements = movedElements.filter(el => el.type !== 'rock');
+                }
+            }
 
             // 2. Check collisions
             const collisionResult = checkCollisions(nextPlayerState, movedElements, particles);
             nextPlayerState = collisionResult.nextPlayer;
             scoreGained += collisionResult.scoreGained;
-            rocksHitThisFrame += collisionResult.rocksHit;
+            const rocksHitByCollision = collisionResult.rocksHit;
+            rocksHitThisFrame = rocksHitBySlam + rocksHitByCollision; // Total for stats
+
             if (collisionResult.particlesToCreate.length > 0) {
                 particlesToCreate.push(...collisionResult.particlesToCreate);
             }
@@ -585,6 +652,10 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
             }
             if (collisionResult.playerHitThisFrame) {
                 playerHitThisFrame = true;
+            }
+
+            if (rocksHitByCollision > 0) {
+                checkQuestProgress('rockBreaker', rocksHitByCollision);
             }
 
             // 3. Filter elements and handle ground collisions
@@ -743,9 +814,22 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
 
             setLightningStrikes(nextLightningStrikes);
             setBurningPatches(nextBurningPatches);
+            setScreenShake(nextScreenShake);
 
             if (shouldClearShellAnimation) {
                 setShellBreakAnimation(null);
+            }
+
+
+
+            // Handle Seismic Shake Timer
+            if (seismicShakeTimerRef.current > 0) {
+                seismicShakeTimerRef.current -= deltaTime;
+                const shakeIntensity = 5 * (seismicShakeTimerRef.current / 3.0);
+                nextScreenShake = {
+                    x: (Math.random() - 0.5) * shakeIntensity * 2,
+                    y: (Math.random() - 0.5) * shakeIntensity * 2
+                };
             }
         }
 
