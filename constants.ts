@@ -1,4 +1,5 @@
 // Game area dimensions
+export const GAME_WIDTH = 800;
 export const GAME_HEIGHT = 700;
 export const GROUND_HEIGHT = 180;
 

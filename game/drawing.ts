@@ -1,4 +1,4 @@
-import type { PlayerState, ElementState, Season, ShellBreakAnimationState, CharacterId, ShellReformAnimationState, BurningPatchState, CloudState, ParticleState, GameStatus, FloatingScoreState, FloatingTextState, LightningStrike } from '../types';
+import type { PlayerState, ElementState, Season, ShellBreakAnimationState, CharacterId, ShellReformAnimationState, BurningPatchState, CloudState, ParticleState, GameStatus, FloatingScoreState, FloatingTextState, LightningStrike, HealingFountainState } from '../types';
 import type { Character } from './characters/index';
 import { PLAYER_WIDTH, PLAYER_HEIGHT, GAME_HEIGHT, GROUND_HEIGHT } from '../constants';
 import { groundDetails } from './state';
@@ -258,7 +258,7 @@ export function drawGame(
     clouds: CloudState[],
     burningPatches: BurningPatchState[],
     timeInMonth: number,
-    gameState: { player: PlayerState, elements: ElementState[] },
+    gameState: { player: PlayerState, elements: ElementState[], healingFountains?: HealingFountainState[] },
     particles: ParticleState[],
     gameStatus: GameStatus,
     shellBreakAnimation: ShellBreakAnimationState | null,
@@ -314,6 +314,57 @@ export function drawGame(
     }
 
     drawGround(ctx, season, currentEvent, gameDimensions.width, burningPatches, timeInMonth);
+
+    // Draw Healing Fountains
+    if (gameState.healingFountains) {
+        gameState.healingFountains.forEach(f => {
+            ctx.save();
+            ctx.translate(f.x, f.y);
+
+            // Fountain base
+            ctx.fillStyle = '#8899aa';
+            ctx.fillRect(0, -10, f.width, 10);
+
+            // Water effect
+            const time = Date.now() / 1000;
+            const waterHeight = Math.sin(time * 5) * 10 + 40;
+
+            const gradient = ctx.createLinearGradient(0, -10, 0, -waterHeight);
+            gradient.addColorStop(0, '#3b82f6');
+            gradient.addColorStop(1, '#93c5fd');
+            ctx.fillStyle = gradient;
+
+            ctx.beginPath();
+            ctx.moveTo(10, -10);
+            ctx.quadraticCurveTo(f.width / 2, -waterHeight - 20, f.width - 10, -10);
+            ctx.fill();
+
+
+            // Particles/Sparkles
+            if (Math.random() < 0.3) {
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(f.width / 2 + (Math.random() - 0.5) * 30, -Math.random() * waterHeight, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Capacity Bar
+            const barWidth = 40;
+            const barHeight = 6;
+            const barY = -waterHeight - 35;
+            const percent = Math.max(0, Math.min(1, f.currentCapacity / f.maxCapacity));
+
+            // Bar background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(f.width / 2 - barWidth / 2 - 2, barY - 2, barWidth + 4, barHeight + 4);
+
+            // Bar fill
+            ctx.fillStyle = percent > 0.5 ? '#22c55e' : percent > 0.2 ? '#eab308' : '#ef4444';
+            ctx.fillRect(f.width / 2 - barWidth / 2, barY, barWidth * percent, barHeight);
+
+            ctx.restore();
+        });
+    }
 
     // Draw elements
     gameState.elements.forEach(el => drawRainingElement(ctx, el, season));

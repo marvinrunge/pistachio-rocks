@@ -10,16 +10,15 @@ export function createRockParticles(
   isGolden: boolean = false
 ): ParticleState[] {
   const particlesToCreate: ParticleState[] = [];
-  const numParticles = 8 + Math.floor(rock.size / 4);
+  const numParticles = 4;
   const random = (seed: number) => {
     const x = Math.sin(seed) * 10000;
     return x - Math.floor(x);
   };
   const rockColor = isGolden
     ? `rgb(255, 215, 0)`
-    : `rgb(${100 + random(rock.id) * 20}, ${100 + random(rock.id + 1) * 20}, ${
-        100 + random(rock.id + 2) * 20
-      })`;
+    : `rgb(${100 + random(rock.id) * 20}, ${100 + random(rock.id + 1) * 20}, ${100 + random(rock.id + 2) * 20
+    })`;
 
   for (let i = 0; i < numParticles; i++) {
     const angle = Math.random() * 2 * Math.PI;
@@ -45,7 +44,7 @@ export function createWaterSplashParticles(splash: {
   size: number;
 }): ParticleState[] {
   const particlesToCreate: ParticleState[] = [];
-  const numParticles = 10 + Math.floor(splash.size / 2);
+  const numParticles = 4;
   for (let i = 0; i < numParticles; i++) {
     const angle = Math.PI + Math.random() * Math.PI;
     const speed = 60 + Math.random() * 100;
@@ -90,21 +89,21 @@ export function createDustParticles(dust: {
 }
 
 export function createSeasonalParticles(season: Season, gameWidth: number, deltaTime: number): ParticleState[] {
-    const particlesToCreate: ParticleState[] = [];
-    if (season === 'autumn' && Math.random() < deltaTime * 10) {
-        particlesToCreate.push({
-            id: Math.random(),
-            x: Math.random() * gameWidth,
-            y: -10,
-            xVelocity: 20 - Math.random() * 40,
-            yVelocity: 50 + Math.random() * 20,
-            size: 8 + Math.random() * 4,
-            color: ['#d97706', '#f59e0b', '#b45309'][Math.floor(Math.random() * 3)],
-            lifespan: 10,
-            type: 'leaf',
-        });
-    }
-    return particlesToCreate;
+  const particlesToCreate: ParticleState[] = [];
+  if (season === 'autumn' && Math.random() < deltaTime * 10) {
+    particlesToCreate.push({
+      id: Math.random(),
+      x: Math.random() * gameWidth,
+      y: -10,
+      xVelocity: 20 - Math.random() * 40,
+      yVelocity: 50 + Math.random() * 20,
+      size: 8 + Math.random() * 4,
+      color: ['#d97706', '#f59e0b', '#b45309'][Math.floor(Math.random() * 3)],
+      lifespan: 10,
+      type: 'leaf',
+    });
+  }
+  return particlesToCreate;
 }
 
 

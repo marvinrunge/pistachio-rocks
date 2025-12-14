@@ -148,3 +148,31 @@ export type FloatingScoreState = {
   lifespan: number;
   isGolden: boolean;
 };
+
+export type QuestType = 'rainDancer' | 'geologist';
+
+export type QuestState = {
+  id: QuestType;
+  title: string;
+  progress: number;
+  target: number;
+  level: number;
+  isCompleted: boolean;
+};
+
+export type QuestNotification = {
+  id: number;
+  questTitle: string;
+  level: number;
+  lifespan: number;
+};
+
+export type HealingFountainState = {
+  id: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  maxCapacity: number;
+  currentCapacity: number;
+};

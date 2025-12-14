@@ -34,6 +34,7 @@ interface UseCollisionSystemProps {
     setShellBreakAnimation: Dispatch<SetStateAction<ShellBreakAnimationState | null>>;
     setShellReformAnimation: Dispatch<SetStateAction<ShellReformAnimationState | null>>;
     handleGameOver: () => void;
+    onWaterCollect?: () => void;
 }
 
 export const useCollisionSystem = ({
@@ -48,6 +49,7 @@ export const useCollisionSystem = ({
     setShellBreakAnimation,
     setShellReformAnimation,
     handleGameOver,
+    onWaterCollect,
 }: UseCollisionSystemProps) => {
 
     const checkCollisions = useCallback((
@@ -221,6 +223,8 @@ export const useCollisionSystem = ({
                         const newHealth = Math.min(maxHealth, nextPlayer.health + roundedHeal);
                         nextPlayer.health = newHealth;
 
+                        onWaterCollect?.();
+
                         // Restore shell if player was naked and now has health
                         if (nextPlayer.isNaked && newHealth > 0) {
                             nextPlayer.isNaked = false;
@@ -243,7 +247,7 @@ export const useCollisionSystem = ({
             playerHitThisFrame,
             collidedElementIds
         };
-    }, [character, goldenTouchChance, blockChance, extraLives, maxHealth, bonusHeal, season, setExtraLives, setShellBreakAnimation, handleGameOver]);
+    }, [character, goldenTouchChance, blockChance, extraLives, maxHealth, bonusHeal, season, setExtraLives, setShellBreakAnimation, handleGameOver, onWaterCollect]);
 
     return { checkCollisions };
 };

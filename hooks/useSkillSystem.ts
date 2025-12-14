@@ -60,7 +60,7 @@ export const useSkillSystem = ({
                 setMaxHealth(prev => prev + 5);
                 break;
             case 'increasedAgility':
-                setMaxSpeed(prev => prev + 40);
+                setMaxSpeed(prev => prev + 45);
                 break;
             case 'waterAffinity':
                 setBonusHeal(prev => prev + 1);

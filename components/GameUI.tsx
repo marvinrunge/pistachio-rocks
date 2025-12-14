@@ -46,7 +46,7 @@ const HealthBar: React.FC<{ health: number, maxHealth: number }> = ({ health, ma
     return (
         <div className="relative w-40 sm:w-48 h-6 bg-gray-700 border-2 border-black rounded-full overflow-hidden">
             <div
-                className={`h-full ${barColor} transition-all duration-200`}
+                className={`h-full ${barColor} transition-all duration-75`}
                 style={{ width: `${percentage}%` }}
             />
             <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white" style={{ textShadow: '1px 1px 2px black' }}>
@@ -660,7 +660,7 @@ const seasonIcons: Record<Season, string> = {
     winter: '❄️',
 };
 
-export const GameUI: React.FC<GameUIProps> = ({ status, health, maxHealth, score, onStart, difficultyLevel, timeInMonth, availableSkills, onSelectSkill, season, rocksDestroyed, playerSpeed, onSaveScore, highScores, onShowHighScores, onShowInstructions, onShowAbout, onBackToMenu, extraLives, acquiredSkills, leaderboardState, lastSubmissionResult, characterId, onShowCharacterSelect, onSelectCharacter, onStartDebugGame, onFetchVersionScores, gameVersion, archivedVersions, assetsReady }) => {
+export const GameUI = React.memo<GameUIProps>(({ status, health, maxHealth, score, onStart, difficultyLevel, timeInMonth, availableSkills, onSelectSkill, season, rocksDestroyed, playerSpeed, onSaveScore, highScores, onShowHighScores, onShowInstructions, onShowAbout, onBackToMenu, extraLives, acquiredSkills, leaderboardState, lastSubmissionResult, characterId, onShowCharacterSelect, onSelectCharacter, onStartDebugGame, onFetchVersionScores, gameVersion, archivedVersions, assetsReady }) => {
 
     const [selectedHighScoreId, setSelectedHighScoreId] = useState<number | null>(null);
     const [showDebugMenu, setShowDebugMenu] = useState(false);
@@ -734,4 +734,4 @@ export const GameUI: React.FC<GameUIProps> = ({ status, health, maxHealth, score
             </div>
         </div>
     );
-};
+}); // End of memo

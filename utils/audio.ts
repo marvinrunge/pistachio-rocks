@@ -746,3 +746,34 @@ export const playGameOverSound = () => {
     oscillator.start(now);
     oscillator.stop(now + 0.5);
 };
+
+/**
+ * Plays a triumphant fanfare for completing a quest.
+ */
+export const playQuestCompleteSound = () => {
+    if (!audioContext) return;
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+
+    const start = audioContext.currentTime;
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+    const duration = 0.15;
+
+    notes.forEach((freq, i) => {
+        const osc = audioContext!.createOscillator();
+        const gain = audioContext!.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, start + i * duration);
+
+        gain.gain.setValueAtTime(0.1, start + i * duration);
+        gain.gain.linearRampToValueAtTime(0, start + i * duration + duration);
+
+        osc.connect(gain);
+        gain.connect(audioContext!.destination);
+
+        osc.start(start + i * duration);
+        osc.stop(start + i * duration + duration);
+    });
+};

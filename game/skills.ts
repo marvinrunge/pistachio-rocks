@@ -2,8 +2,8 @@ import type { Skill } from '../types';
 
 export const PERMANENT_SKILL_POOL: Skill[] = [
   { id: 'shellFortification', title: 'Shell Fortification', description: 'Permanently increases your maximum Shell HP by 5.', color: 'text-green-400' },
-  { id: 'increasedAgility', title: 'Increased Agility', description: 'Permanently increases your maximum movement speed.', color: 'text-blue-400' },
-  { id: 'soothingRains', title: 'Soothing Rains', description: 'Permanently increases the frequency of healing water drops.', color: 'text-cyan-400' },
+  { id: 'increasedAgility', title: 'Increased Agility', description: 'Permanently increases your maximum movement speed by 15%.', color: 'text-blue-400' },
+  { id: 'soothingRains', title: 'Soothing Rains', description: 'Permanently reduces the time between water drops by 10%.', color: 'text-cyan-400' },
 ];
 
 export const EVENT_SKILL_POOL: Skill[] = [
@@ -13,6 +13,6 @@ export const EVENT_SKILL_POOL: Skill[] = [
 ];
 
 export const YEARLY_SKILL_POOL: Skill[] = [
-    { id: 'photosynthesis', title: 'Photosynthesis', description: 'Regenerate 1 HP for every second you stand still. Stacks increase this amount.', color: 'text-emerald-400' },
-    { id: 'goldenTouch', title: 'Golden Touch', description: 'Gain a 5% chance for destroyed rocks to grant 10x score. Stacks increase chance.', color: 'text-amber-400' },
+  { id: 'photosynthesis', title: 'Photosynthesis', description: 'Regenerate 1 HP for every second you stand still. Stacks increase this amount.', color: 'text-emerald-400' },
+  { id: 'goldenTouch', title: 'Golden Touch', description: 'Gain a 5% chance for destroyed rocks to grant 10x score. Stacks increase chance.', color: 'text-amber-400' },
 ];
