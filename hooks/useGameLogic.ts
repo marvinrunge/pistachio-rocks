@@ -100,7 +100,8 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
         playerSlowTimer,
         currentEvent,
         windDirection,
-        getInputState
+        getInputState,
+        acquiredSkills
     });
 
     const { spawnGameElements, updateGameElements, resetSpawnTimers } = useGameElements({
@@ -142,6 +143,13 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
     const renderContext = useRef({ scale: 1, offsetX: 0, offsetY: 0 });
     const gameSessionIdRef = useRef<string | null>(null);
 
+    const healPlayer = useCallback((amount: number) => {
+        setGameState(prev => ({
+            ...prev,
+            player: { ...prev.player, health: prev.player.health + amount }
+        }));
+    }, [setGameState]);
+
     const { handleLevelUp, handleSkillSelect, simulateSkillsForDebug } = useSkillSystem({
         monthCounter,
         difficultyLevel,
@@ -163,7 +171,8 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
         setGoldenTouchChance,
         clearEventEffects,
         resetGameInput,
-        lastFrameTimeRef: lastFrameTime
+        lastFrameTimeRef: lastFrameTime,
+        healPlayer
     });
 
     // Load assets on initial mount

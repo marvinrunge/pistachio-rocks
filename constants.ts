@@ -12,7 +12,7 @@ export const INITIAL_MAX_HEALTH = 20;
 // New Player Physics properties
 export const PLAYER_ACCELERATION = 1200; // pixels per second^2
 export const MAX_PLAYER_SPEED = 300; // pixels per second
-export const GROUND_FRICTION = 800; // pixels per second^2
+export const GROUND_FRICTION = 1200; // pixels per second^2
 export const ICE_FRICTION = 100; // Much lower friction for blizzard event
 export const WIND_FORCE = 400; // a constant force during storm events
 

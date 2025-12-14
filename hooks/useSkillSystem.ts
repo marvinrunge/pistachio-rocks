@@ -26,6 +26,7 @@ interface UseSkillSystemProps {
     clearEventEffects: () => void;
     resetGameInput: () => void;
     lastFrameTimeRef: React.MutableRefObject<number>;
+    healPlayer?: (amount: number) => void;
 }
 
 export const useSkillSystem = ({
@@ -49,7 +50,8 @@ export const useSkillSystem = ({
     setGoldenTouchChance,
     clearEventEffects,
     resetGameInput,
-    lastFrameTimeRef
+    lastFrameTimeRef,
+    healPlayer
 }: UseSkillSystemProps) => {
 
     const applySkillEffect = useCallback((skillId: string) => {
@@ -144,8 +146,11 @@ export const useSkillSystem = ({
 
             setAcquiredSkills(prev => [...prev, skill]);
             applySkillEffect(skill.id);
+            if (skill.id === 'shellFortification' && healPlayer) {
+                healPlayer(5);
+            }
         }
-    }, [applySkillEffect, setAcquiredSkills]);
+    }, [applySkillEffect, setAcquiredSkills, healPlayer]);
 
     return {
         handleLevelUp,

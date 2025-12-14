@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { GameUI } from './components/GameUI';
 import { useGameLogic } from './hooks/useGameLogic';
 import { GAME_HEIGHT, GAME_VERSION, ARCHIVED_GAME_VERSIONS } from './constants';
+import { toggleMute, getMuted } from './utils/audio';
+
 
 const App: React.FC = () => {
     const [gameDimensions, setGameDimensions] = useState({ width: 800, height: GAME_HEIGHT });
@@ -10,7 +12,8 @@ const App: React.FC = () => {
     const appWrapperRef = useRef<HTMLDivElement>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [isFullScreenSupported, setIsFullScreenSupported] = useState(false);
-    
+    const [isMuted, setIsMuted] = useState(getMuted());
+
     const gameLogic = useGameLogic({ canvasRef, gameDimensions });
 
     useEffect(() => {
@@ -20,18 +23,18 @@ const App: React.FC = () => {
             if (!canvas || !container) return;
 
             const { clientWidth, clientHeight } = container;
-            
+
             const scale = clientHeight / GAME_HEIGHT;
             const newGameWidth = clientWidth / scale;
-            
+
             setGameDimensions({ width: newGameWidth, height: GAME_HEIGHT });
-            
+
             canvas.width = clientWidth;
             canvas.height = clientHeight;
 
             setUiTransform({ scale, x: 0, y: 0 });
         };
-        
+
         updateScale();
         window.addEventListener('resize', updateScale);
         return () => window.removeEventListener('resize', updateScale);
@@ -87,11 +90,16 @@ const App: React.FC = () => {
             }
         }
     };
-    
+
+    const handleToggleMute = () => {
+        const newMutedState = toggleMute();
+        setIsMuted(newMutedState);
+    };
+
     const isMenuVisible = ['start', 'highScores', 'instructions', 'characterSelect', 'about'].includes(gameLogic.status);
 
     return (
-        <div 
+        <div
             ref={appWrapperRef}
             className="relative w-screen h-screen bg-black font-mono text-white overflow-hidden flex items-center justify-center"
             style={{ touchAction: 'none' }}
@@ -104,8 +112,8 @@ const App: React.FC = () => {
                 ref={canvasRef}
                 className="absolute top-0 left-0"
             />
-            
-            <div 
+
+            <div
                 className="absolute top-0 left-0"
                 style={{
                     width: gameDimensions.width,
@@ -117,12 +125,12 @@ const App: React.FC = () => {
                 }}
             >
                 <div style={{ pointerEvents: 'auto' }}>
-                    <GameUI 
-                        status={gameLogic.status} 
-                        health={gameLogic.playerHealth} 
+                    <GameUI
+                        status={gameLogic.status}
+                        health={gameLogic.playerHealth}
                         maxHealth={gameLogic.maxHealth}
-                        score={gameLogic.score} 
-                        onStart={gameLogic.startGame} 
+                        score={gameLogic.score}
+                        onStart={gameLogic.startGame}
                         difficultyLevel={gameLogic.monthCounter}
                         timeInMonth={gameLogic.timeInMonth}
                         availableSkills={gameLogic.availableSkills}
@@ -152,7 +160,7 @@ const App: React.FC = () => {
                 </div>
                 {gameLogic.incomingEventTitle && (
                     <div className="absolute top-0 left-0 w-full flex justify-center mt-16 pointer-events-none" style={{ zIndex: 60 }}>
-                        <h2 
+                        <h2
                             className="text-3xl sm:text-5xl font-bold text-red-500 animate-warning-pulse text-center px-4"
                             style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.7)' }}
                         >
@@ -162,18 +170,31 @@ const App: React.FC = () => {
                 )}
             </div>
 
-            {isFullScreenSupported && isMenuVisible && (
-                <button
-                    onClick={toggleFullscreen}
-                    className="absolute top-4 right-4 z-50 p-2 bg-black/50 rounded-full hover:bg-black/75 transition-colors"
-                    aria-label={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
-                >
-                    {isFullscreen ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>
-                    ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-                    )}
-                </button>
+            {isFullScreenSupported && (
+                <div className="absolute top-4 right-4 z-50 flex space-x-2">
+                    <button
+                        onClick={handleToggleMute}
+                        className="p-2 bg-black/50 rounded-full hover:bg-black/75 transition-colors"
+                        aria-label={isMuted ? 'Unmute' : 'Mute'}
+                    >
+                        {isMuted ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                        )}
+                    </button>
+                    <button
+                        onClick={toggleFullscreen}
+                        className="p-2 bg-black/50 rounded-full hover:bg-black/75 transition-colors"
+                        aria-label={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+                    >
+                        {isFullscreen ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" /></svg>
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" /></svg>
+                        )}
+                    </button>
+                </div>
             )}
         </div>
     );

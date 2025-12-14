@@ -1,6 +1,30 @@
 // This file uses the Web Audio API to generate sound effects programmatically.
 
 let audioContext: AudioContext | null = null;
+let isMuted = false;
+
+/**
+ * Toggles the mute state of the audio context.
+ * returns the new muted state.
+ */
+export const toggleMute = (): boolean => {
+    isMuted = !isMuted;
+    if (audioContext) {
+        if (isMuted) {
+            audioContext.suspend();
+        } else {
+            audioContext.resume();
+        }
+    }
+    return isMuted;
+};
+
+/**
+ * Returns the current mute state.
+ */
+export const getMuted = (): boolean => {
+    return isMuted;
+};
 
 /**
  * Initializes the global AudioContext.
@@ -8,9 +32,12 @@ let audioContext: AudioContext | null = null;
  * to comply with browser autoplay policies.
  */
 export const initAudio = () => {
-  if (!audioContext) {
-    audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-  }
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        if (isMuted) {
+            audioContext.suspend();
+        }
+    }
 };
 
 /**
@@ -22,11 +49,11 @@ export const playJumpSound = () => {
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     const now = audioContext.currentTime;
-    
+
     oscillator.type = 'square';
     gainNode.gain.setValueAtTime(0, now);
     gainNode.gain.linearRampToValueAtTime(0.2, now + 0.01);
-    
+
     oscillator.frequency.setValueAtTime(440, now);
     oscillator.frequency.exponentialRampToValueAtTime(880, now + 0.1);
 
@@ -84,7 +111,7 @@ export const playDamageSound = () => {
  */
 const playImpactSoundCrunch = (size?: number) => {
     if (!audioContext) return;
-    
+
     const bufferSize = audioContext.sampleRate * 0.1; // 0.1 seconds
     const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
     const output = buffer.getChannelData(0);
@@ -106,10 +133,10 @@ const playImpactSoundCrunch = (size?: number) => {
         const maxSize = 40; // Corresponds to MAX_ELEMENT_SIZE
         const minRate = 0.7; // Lower pitch for max size
         const maxRate = 1.5; // Higher pitch for min size
-        
+
         // Clamp the size to the expected range
         const clampedSize = Math.max(minSize, Math.min(maxSize, size));
-        
+
         const sizeRatio = (clampedSize - minSize) / (maxSize - minSize);
         // Invert the ratio so large size maps to low rate
         noise.playbackRate.value = (maxRate - (sizeRatio * (maxRate - minRate))) * randomPitch;
@@ -136,7 +163,7 @@ const playImpactSoundCrunch = (size?: number) => {
  */
 const playImpactSoundCrunchLower = (size?: number) => {
     if (!audioContext) return;
-    
+
     const bufferSize = audioContext.sampleRate * 0.12; // a bit longer for lower sound
     const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
     const output = buffer.getChannelData(0);
@@ -157,9 +184,9 @@ const playImpactSoundCrunchLower = (size?: number) => {
         const maxSize = 40;
         const minRate = 0.5; // Lower pitch for max size (was 0.7)
         const maxRate = 1.2; // Higher pitch for min size (was 1.5)
-        
+
         const clampedSize = Math.max(minSize, Math.min(maxSize, size));
-        
+
         const sizeRatio = (clampedSize - minSize) / (maxSize - minSize);
         // Invert the ratio so large size maps to low rate
         noise.playbackRate.value = (maxRate - (sizeRatio * (maxRate - minRate))) * randomPitch;
@@ -211,7 +238,7 @@ const playImpactSoundCrack = (size?: number) => {
     gainNode.gain.setValueAtTime(0, now);
     gainNode.gain.linearRampToValueAtTime(0.5, now + 0.005);
     gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-    
+
     // Pitch variation
     const randomPitch = 0.9 + Math.random() * 0.2; // +/- 10%
     const playbackRate = (1.6 - ((size || 25) / 40)) * randomPitch; // Simple pitch scaling, slightly higher pitch overall
@@ -254,7 +281,7 @@ const playImpactSoundCrackAlternate = (size?: number) => {
     gainNode.gain.setValueAtTime(0, now);
     gainNode.gain.linearRampToValueAtTime(0.6, now + 0.005);
     gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-    
+
     // Pitch variation
     const randomPitch = 0.95 + Math.random() * 0.1; // Tighter pitch range
     // A different playback rate curve
@@ -290,10 +317,10 @@ export const playWaterCollectSound = () => {
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     const now = audioContext.currentTime;
-    
+
     oscillator.type = 'sine';
     gainNode.gain.setValueAtTime(0.3, now);
-    
+
     oscillator.frequency.setValueAtTime(900, now);
     oscillator.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
 
@@ -357,7 +384,7 @@ export const playLightningStrikeSound = () => {
     }
     const noise = audioContext.createBufferSource();
     noise.buffer = buffer;
-    
+
     const biquadFilter = audioContext.createBiquadFilter();
     biquadFilter.type = "highpass";
     biquadFilter.frequency.setValueAtTime(1000, now);
@@ -382,13 +409,13 @@ export const playLightningStrikeSound = () => {
     zapGain.gain.setValueAtTime(0, now);
     zapGain.gain.linearRampToValueAtTime(0.4, now + 0.01);
     zapGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-    
+
     zapOscillator.frequency.setValueAtTime(2000, now);
     zapOscillator.frequency.exponentialRampToValueAtTime(50, now + 0.08);
 
     zapOscillator.connect(zapGain);
     zapGain.connect(audioContext.destination);
-    
+
     zapOscillator.start(now);
     zapOscillator.stop(now + 0.1);
 };
@@ -456,7 +483,7 @@ export const playBlizzardSound = () => {
     biquadFilter.type = "highpass";
     biquadFilter.frequency.setValueAtTime(600, now);
     biquadFilter.Q.setValueAtTime(10, now);
-    
+
     biquadFilter.frequency.linearRampToValueAtTime(1200, now + duration / 2);
     biquadFilter.frequency.linearRampToValueAtTime(600, now + duration);
 
@@ -533,7 +560,7 @@ export const playMeteorImpactSound = () => {
     gain.gain.setValueAtTime(0, now);
     gain.gain.linearRampToValueAtTime(0.8, now + 0.01);
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-    
+
     osc.connect(gain);
     gain.connect(audioContext.destination);
     osc.start(now);
@@ -640,7 +667,7 @@ export const playSeismicSlamSound = () => {
     const gain = audioContext.createGain();
     gain.gain.setValueAtTime(1.0, now);
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-    
+
     osc.connect(gain);
     gain.connect(audioContext.destination);
     osc.start(now);

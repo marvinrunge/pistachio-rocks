@@ -231,45 +231,51 @@ export const useEventSystem = ({
         if (updatedPatches.length > 0) {
             const playerFeetY = GAME_HEIGHT - updatedPlayer.y;
             if (playerFeetY >= GAME_HEIGHT - GROUND_HEIGHT && playerFeetY < GAME_HEIGHT - GROUND_HEIGHT + 10) {
+                let isStandingOnFire = false;
                 for (const patch of updatedPatches) {
                     if (playerHitbox.x + playerHitbox.width > patch.x && playerHitbox.x < patch.x + patch.width) {
-                        const damagePerSecond = 5;
-                        const damage = damagePerSecond * deltaTime;
-                        const newHealth = Math.max(0, updatedPlayer.health - damage);
-                        if (newHealth < updatedPlayer.health) {
-                            const damageTaken = updatedPlayer.health - newHealth;
-                            groundDamageAccumulator.current += damageTaken;
+                        isStandingOnFire = true;
+                        break;
+                    }
+                }
 
-                            const now = performance.now();
-                            if (now - lastGroundDamageTime.current > 400 && groundDamageAccumulator.current >= 1) {
-                                const roundedDamage = Math.round(groundDamageAccumulator.current);
-                                floatingTexts.push({
-                                    id: Date.now() + Math.random(),
-                                    x: updatedPlayer.x + PLAYER_WIDTH / 2,
-                                    y: GAME_HEIGHT - updatedPlayer.y - PLAYER_HEIGHT,
-                                    text: `-${roundedDamage}`,
-                                    color: '#f97316', // Orange for fire damage
-                                    lifespan: 1.0,
-                                });
-                                groundDamageAccumulator.current = 0;
-                                lastGroundDamageTime.current = now;
-                            }
+                if (isStandingOnFire) {
+                    const damagePerSecond = 1;
+                    const damage = damagePerSecond * deltaTime;
+                    const newHealth = Math.max(0, updatedPlayer.health - damage);
+                    if (newHealth < updatedPlayer.health) {
+                        const damageTaken = updatedPlayer.health - newHealth;
+                        groundDamageAccumulator.current += damageTaken;
 
-                            if (newHealth <= 0) {
-                                if (extraLives > 0) {
-                                    setExtraLives(e => e - 1);
-                                    playResurrectSound();
-                                    screenFlash = 0.8;
-                                    updatedPlayer.health = maxHealth;
-                                    updatedPlayer.isNaked = false; // Restore shell on resurrection
-                                } else {
-                                    if (updatedPlayer.health > 0) playShellCrackSound();
-                                    updatedPlayer.health = 0;
-                                    updatedPlayer.isNaked = true;
-                                }
+                        const now = performance.now();
+                        if (now - lastGroundDamageTime.current > 400 && groundDamageAccumulator.current >= 1) {
+                            const roundedDamage = Math.round(groundDamageAccumulator.current);
+                            floatingTexts.push({
+                                id: Date.now() + Math.random(),
+                                x: updatedPlayer.x + PLAYER_WIDTH / 2,
+                                y: GAME_HEIGHT - updatedPlayer.y - PLAYER_HEIGHT,
+                                text: `-${roundedDamage}`,
+                                color: '#f97316', // Orange for fire damage
+                                lifespan: 1.0,
+                            });
+                            groundDamageAccumulator.current = 0;
+                            lastGroundDamageTime.current = now;
+                        }
+
+                        if (newHealth <= 0) {
+                            if (extraLives > 0) {
+                                setExtraLives(e => e - 1);
+                                playResurrectSound();
+                                screenFlash = 0.8;
+                                updatedPlayer.health = maxHealth;
+                                updatedPlayer.isNaked = false; // Restore shell on resurrection
                             } else {
-                                updatedPlayer.health = newHealth;
+                                if (updatedPlayer.health > 0) playShellCrackSound();
+                                updatedPlayer.health = 0;
+                                updatedPlayer.isNaked = true;
                             }
+                        } else {
+                            updatedPlayer.health = newHealth;
                         }
                     }
                 }

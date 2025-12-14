@@ -22,6 +22,7 @@ interface UsePlayerPhysicsProps {
     currentEvent: string | null;
     windDirection: 'left' | 'right' | null;
     getInputState: () => { isMovingLeft: boolean, isMovingRight: boolean, isTryingToJump: boolean, resetJump: () => void };
+    acquiredSkills: { id: string }[];
 }
 
 export const usePlayerPhysics = ({
@@ -31,6 +32,7 @@ export const usePlayerPhysics = ({
     currentEvent,
     windDirection,
     getInputState,
+    acquiredSkills
 }: UsePlayerPhysicsProps) => {
 
     const updatePlayerPhysics = useCallback((player: PlayerState, deltaTime: number): { nextPlayer: PlayerState, newParticles: ParticleState[] } => {
@@ -38,7 +40,13 @@ export const usePlayerPhysics = ({
         const newParticles: ParticleState[] = [];
         const { isMovingLeft, isMovingRight, isTryingToJump, resetJump } = getInputState();
 
-        const friction = (currentEvent === 'blizzard' && nextPlayer.y <= GROUND_HEIGHT) ? ICE_FRICTION : GROUND_FRICTION;
+        const hasAgility = acquiredSkills.some(s => s.id === 'increasedAgility');
+        let friction = (currentEvent === 'blizzard' && nextPlayer.y <= GROUND_HEIGHT) ? ICE_FRICTION : GROUND_FRICTION;
+
+        if (hasAgility && currentEvent !== 'blizzard') {
+            friction *= 2; // Drastically increase friction for tighter control
+        }
+
         const effectiveAcceleration = playerSlowTimer > 0 ? PLAYER_ACCELERATION * 0.5 : PLAYER_ACCELERATION;
 
         // Horizontal Movement

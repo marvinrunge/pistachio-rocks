@@ -14,7 +14,7 @@ export function drawPlayer(ctx: CanvasRenderingContext2D, player: PlayerState, s
 export function drawRainingElement(ctx: CanvasRenderingContext2D, el: ElementState, season: Season) {
     ctx.save();
     ctx.translate(el.x, el.y);
-    
+
     if (el.type === 'snow') {
         ctx.translate(el.size / 2, el.size / 2);
         ctx.rotate(el.id % 360 * Math.PI / 180);
@@ -50,13 +50,13 @@ export function drawRainingElement(ctx: CanvasRenderingContext2D, el: ElementSta
     } else if (el.type === 'meteor') {
         ctx.save();
         ctx.translate(el.size / 2, el.size / 2);
-        
+
         const gradient = ctx.createRadialGradient(0, 0, el.size * 0.1, 0, 0, el.size / 2);
         gradient.addColorStop(0, 'white');
         gradient.addColorStop(0.4, '#fef08a'); // yellow
         gradient.addColorStop(0.8, '#f97316'); // orange
         gradient.addColorStop(1, 'rgba(239, 68, 68, 0.5)'); // transparent red
-        
+
         ctx.fillStyle = gradient;
         ctx.beginPath();
         ctx.arc(0, 0, el.size / 2, 0, 2 * Math.PI);
@@ -83,9 +83,9 @@ export function drawRainingElement(ctx: CanvasRenderingContext2D, el: ElementSta
 
         let mainColor: string;
         switch (season) {
-            case 'summer': mainColor = `rgb(${190 + random(seed)*20}, ${170 + random(seed+1)*20}, ${140 + random(seed+2)*20})`; break;
-            case 'winter': mainColor = `rgb(${220 + random(seed)*20}, ${225 + random(seed+1)*20}, ${230 + random(seed+2)*20})`; break;
-            default: mainColor = `rgb(${100 + random(seed)*20}, ${100 + random(seed+1)*20}, ${100 + random(seed+2)*20})`; break;
+            case 'summer': mainColor = `rgb(${190 + random(seed) * 20}, ${170 + random(seed + 1) * 20}, ${140 + random(seed + 2) * 20})`; break;
+            case 'winter': mainColor = `rgb(${220 + random(seed) * 20}, ${225 + random(seed + 1) * 20}, ${230 + random(seed + 2) * 20})`; break;
+            default: mainColor = `rgb(${100 + random(seed) * 20}, ${100 + random(seed + 1) * 20}, ${100 + random(seed + 2) * 20})`; break;
         }
         const borderColor = '#4a4a4a'; // Dark grey outline
 
@@ -96,9 +96,9 @@ export function drawRainingElement(ctx: CanvasRenderingContext2D, el: ElementSta
         ctx.translate(el.size / 2, el.size / 2);
         ctx.rotate(random(seed + 3) * 360 * Math.PI / 180);
         ctx.translate(-el.size / 2, -el.size / 2);
-        
+
         ctx.beginPath();
-        const borderRadius = (random(seed+4)*30+20) / 100 * el.size;
+        const borderRadius = (random(seed + 4) * 30 + 20) / 100 * el.size;
         ctx.moveTo(borderRadius, 0);
         ctx.lineTo(el.size - borderRadius, 0);
         ctx.arcTo(el.size, 0, el.size, borderRadius, borderRadius);
@@ -111,7 +111,7 @@ export function drawRainingElement(ctx: CanvasRenderingContext2D, el: ElementSta
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
-        
+
         const gradient = ctx.createLinearGradient(0, 0, el.size, el.size);
         gradient.addColorStop(0, 'rgba(255,255,255,0.3)');
         gradient.addColorStop(1, 'rgba(0,0,0,0.3)');
@@ -124,7 +124,7 @@ export function drawRainingElement(ctx: CanvasRenderingContext2D, el: ElementSta
 export function drawGround(ctx: CanvasRenderingContext2D, season: Season, currentEvent: string | null, gameWidth: number, burningPatches: BurningPatchState[], timeInMonth?: number) {
     const groundY = GAME_HEIGHT - GROUND_HEIGHT;
     let grassColors = { from: '#22c55e', to: '#166534' };
-    if (season === 'summer' || currentEvent === 'meteorShower') grassColors = { from: '#84cc16', to: '#a3e635' };
+    if (season === 'summer' || currentEvent === 'meteorShower') grassColors = { from: '#2a7425ff', to: '#44a12dff' };
     if (season === 'autumn') grassColors = { from: '#f97316', to: '#b45309' };
 
     if (currentEvent === 'thunderstorm') {
@@ -142,11 +142,11 @@ export function drawGround(ctx: CanvasRenderingContext2D, season: Season, curren
         groundDetails.spring.forEach(flower => {
             ctx.fillStyle = flower.color;
             ctx.beginPath();
-            ctx.arc(flower.x * gameWidth, groundY + flower.y * GROUND_HEIGHT, flower.size / 2, 0, 2*Math.PI);
+            ctx.arc(flower.x * gameWidth, groundY + flower.y * GROUND_HEIGHT, flower.size / 2, 0, 2 * Math.PI);
             ctx.fill();
             ctx.fillStyle = '#fef08a';
             ctx.beginPath();
-            ctx.arc(flower.x * gameWidth, groundY + flower.y * GROUND_HEIGHT, flower.size / 6, 0, 2*Math.PI);
+            ctx.arc(flower.x * gameWidth, groundY + flower.y * GROUND_HEIGHT, flower.size / 6, 0, 2 * Math.PI);
             ctx.fill();
         });
     } else if (season === 'autumn') {
@@ -157,7 +157,7 @@ export function drawGround(ctx: CanvasRenderingContext2D, season: Season, curren
             ctx.fillStyle = leaf.color;
             ctx.globalAlpha = 0.8;
             ctx.beginPath();
-            ctx.ellipse(0, 0, leaf.size/2, leaf.size * 0.35, 0, 0, 2*Math.PI);
+            ctx.ellipse(0, 0, leaf.size / 2, leaf.size * 0.35, 0, 0, 2 * Math.PI);
             ctx.fill();
             ctx.restore();
         });
@@ -172,10 +172,10 @@ export function drawGround(ctx: CanvasRenderingContext2D, season: Season, curren
 
         ctx.fillStyle = 'rgba(173, 216, 230, 0.2)';
         ctx.beginPath();
-        ctx.ellipse(gameWidth * 0.25, groundY + GROUND_HEIGHT * 0.8, 50, 10, 0, 0, 2*Math.PI);
+        ctx.ellipse(gameWidth * 0.25, groundY + GROUND_HEIGHT * 0.8, 50, 10, 0, 0, 2 * Math.PI);
         ctx.fill();
         ctx.beginPath();
-        ctx.ellipse(gameWidth * 0.75, groundY + GROUND_HEIGHT * 0.85, 75, 12, 0, 0, 2*Math.PI);
+        ctx.ellipse(gameWidth * 0.75, groundY + GROUND_HEIGHT * 0.85, 75, 12, 0, 0, 2 * Math.PI);
         ctx.fill();
     }
 
@@ -193,7 +193,7 @@ export function drawGround(ctx: CanvasRenderingContext2D, season: Season, curren
         if (Math.random() > 0.5) {
             const emberX = patch.x + Math.random() * patch.width;
             const emberY = groundY + Math.random() * 10 - 5;
-            ctx.fillStyle = ['#f97316', '#fef08a'][Math.floor(Math.random()*2)];
+            ctx.fillStyle = ['#f97316', '#fef08a'][Math.floor(Math.random() * 2)];
             ctx.beginPath();
             ctx.arc(emberX, emberY, Math.random() * 2 + 1, 0, 2 * Math.PI);
             ctx.fill();
@@ -210,7 +210,7 @@ export function drawGround(ctx: CanvasRenderingContext2D, season: Season, curren
             ctx.fillStyle = 'white';
             ctx.beginPath();
             const startY = groundY;
-            
+
             const segments = 50;
             let firstY = 0;
             // Draw the top wavy line of the snow
@@ -276,26 +276,26 @@ export function drawGame(
 
     ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform to identity matrix
     ctx.clearRect(0, 0, clientWidth, clientHeight);
-    
+
     // Apply global scaling and transformations
     ctx.save();
     ctx.translate(renderContext.offsetX, renderContext.offsetY);
     ctx.scale(renderContext.scale, renderContext.scale);
     ctx.translate(screenShake.x, screenShake.y);
-    
+
     // Draw Background
     let bgColor = { from: '#87CEEB', to: '#4682B4' };
-    if (season === 'summer') bgColor = { from: '#c0ecf7ff', to: '#f5bcabff' };
+    if (season === 'summer') bgColor = { from: '#418b9eff', to: '#52b1b8ff' };
     if (season === 'autumn') bgColor = { from: '#fde68a', to: '#fb923c' };
     if (season === 'winter') bgColor = { from: '#e0f2fe', to: '#bae6fd' };
     if (currentEvent === 'thunderstorm' || currentEvent === 'storm') bgColor = { from: '#4b5563', to: '#1f2937' };
-    if (currentEvent === 'meteorShower') bgColor = { from: '#1e1b4b', to: '#0c0a09'};
+    if (currentEvent === 'meteorShower') bgColor = { from: '#1e1b4b', to: '#0c0a09' };
     const gradient = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
     gradient.addColorStop(0, bgColor.from);
     gradient.addColorStop(1, bgColor.to);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, gameDimensions.width, GAME_HEIGHT);
-    
+
     // Draw clouds
     clouds.forEach(cloud => {
         ctx.fillStyle = cloud.isStormCloud ? 'rgba(50, 50, 70, 0.7)' : 'rgba(255, 255, 255, 0.7)';
@@ -312,42 +312,42 @@ export function drawGame(
         ctx.fillStyle = fogGradient;
         ctx.fillRect(0, 0, gameDimensions.width, GAME_HEIGHT);
     }
-    
+
     drawGround(ctx, season, currentEvent, gameDimensions.width, burningPatches, timeInMonth);
-    
+
     // Draw elements
     gameState.elements.forEach(el => drawRainingElement(ctx, el, season));
-    
+
     // Draw particles
     particles.forEach(p => {
         if (p.type === 'leaf') {
-             ctx.save();
-             ctx.translate(p.x, p.y);
-             ctx.fillStyle = p.color;
-             ctx.globalAlpha = Math.max(0, p.lifespan / 2);
-             ctx.beginPath();
-             ctx.ellipse(0, 0, p.size / 2, p.size * 0.35, 0, 0, 2*Math.PI);
-             ctx.fill();
-             ctx.restore();
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = Math.max(0, p.lifespan / 2);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, p.size / 2, p.size * 0.35, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.restore();
         } else if (p.type === 'dust') {
-             ctx.fillStyle = p.color;
-             ctx.globalAlpha = Math.max(0, p.lifespan);
-             ctx.fillRect(p.x, p.y, p.size * 5, p.size / 3);
-             ctx.globalAlpha = 1;
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = Math.max(0, p.lifespan);
+            ctx.fillRect(p.x, p.y, p.size * 5, p.size / 3);
+            ctx.globalAlpha = 1;
         } else {
-             ctx.fillStyle = p.color;
-             ctx.globalAlpha = Math.max(0, p.lifespan);
-             ctx.beginPath();
-             ctx.arc(p.x, p.y, p.size, 0, 2 * Math.PI);
-             ctx.fill();
-             ctx.globalAlpha = 1;
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = Math.max(0, p.lifespan);
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.globalAlpha = 1;
         }
     });
 
     if (gameStatus === 'playing') {
         drawPlayer(ctx, gameState.player, shellBreakAnimation, character, maxHealth, shellReformAnimation);
     }
-    
+
     // Draw floating scores and texts
     ctx.font = 'bold 20px "Press Start 2P", monospace';
     floatingScores.forEach(fs => {
@@ -360,7 +360,7 @@ export function drawGame(
         ctx.strokeText(text, fs.x - textWidth / 2, fs.y);
         ctx.fillText(text, fs.x - textWidth / 2, fs.y);
     });
-    
+
     ctx.font = 'bold 24px "Press Start 2P", monospace';
     floatingTexts.forEach(ft => {
         ctx.globalAlpha = ft.lifespan;
