@@ -54,8 +54,8 @@ export const playJumpSound = () => {
     gainNode.gain.setValueAtTime(0, now);
     gainNode.gain.linearRampToValueAtTime(0.2, now + 0.01);
 
-    oscillator.frequency.setValueAtTime(440, now);
-    oscillator.frequency.exponentialRampToValueAtTime(880, now + 0.1);
+    oscillator.frequency.setValueAtTime(360, now);
+    oscillator.frequency.exponentialRampToValueAtTime(800, now + 0.1);
 
     gainNode.gain.linearRampToValueAtTime(0, now + 0.15);
 

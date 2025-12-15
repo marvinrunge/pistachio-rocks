@@ -12,7 +12,7 @@ const app = express();
 
 // Allow cross-origin requests specifically from your game's deployed URL.
 // This is a crucial security step for production.
-app.use(cors({ origin: 'https://pistachio-899228832025.us-west1.run.app' }));
+app.use(cors({ origin: 'https://pistachio.rocks' }));
 // For local development, you might temporarily use: app.use(cors({ origin: true }));
 
 // --- Firestore Collection References ---
@@ -63,14 +63,14 @@ app.post('/submit', async (req, res) => {
         // --- Session Validation ---
         const sessionRef = sessionsCollection.doc(gameId);
         const sessionDoc = await sessionRef.get();
-        
+
         if (!sessionDoc.exists) {
             console.warn(`Attempt to submit with invalid or expired gameId: ${gameId}`);
-            return res.status(404).json({ message: "Game session ID is invalid or has expired."});
+            return res.status(404).json({ message: "Game session ID is invalid or has expired." });
         }
         if (sessionDoc.data().status !== 'pending') {
-             console.warn(`Attempt to re-use completed gameId: ${gameId}`);
-            return res.status(403).json({ message: "This game session has already been used."});
+            console.warn(`Attempt to re-use completed gameId: ${gameId}`);
+            return res.status(403).json({ message: "This game session has already been used." });
         }
 
         // --- Anti-Cheat Validation ---
@@ -78,11 +78,11 @@ app.post('/submit', async (req, res) => {
         const secondsSurvived = totalMonths * 30;
         // A generous upper bound for scoring potential
         const maxPossibleScore = (rocksDestroyed * 50) + (secondsSurvived * 15) + 5000;
-        
+
         if (score > maxPossibleScore * 1.1) {
             console.error(`Score rejected by anti-cheat. Submitted: ${score}, Calculated Max: ${maxPossibleScore}`);
             await sessionRef.update({ status: 'completed' });
-            return res.status(403).json({ message: "Score is not valid."});
+            return res.status(403).json({ message: "Score is not valid." });
         }
 
         // --- Save the Score ---
@@ -103,7 +103,7 @@ app.post('/submit', async (req, res) => {
 
         const newScoreRef = scoresCollection.doc();
         await newScoreRef.set(newScoreEntry);
-        
+
         // Mark session as used
         await sessionRef.update({ status: 'completed' });
 
@@ -114,13 +114,13 @@ app.post('/submit', async (req, res) => {
             .count()
             .get();
         const rank = higherScoresSnapshot.data().count + 1;
-        
+
         console.log(`Score submitted successfully for ${name} (v${version}): ${score}. Rank: ${rank}`);
         return res.status(200).json({ success: true, rank, userScore: newScoreEntry });
 
     } catch (error) {
         console.error("Error submitting score:", error);
-        return res.status(500).json({ message: "Internal Server Error: Could not submit score."});
+        return res.status(500).json({ message: "Internal Server Error: Could not submit score." });
     }
 });
 
@@ -150,7 +150,7 @@ app.get('/scores', async (req, res) => {
                 return res.status(200).json([]);
             }
         }
-        
+
         // If we have a version (either from query or fallback), filter by it.
         // This requires a composite index on (version, score).
         // See backend/INSTRUCTIONS.md for how to create this in your Firestore database.
