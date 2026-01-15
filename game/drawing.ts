@@ -374,6 +374,7 @@ export function drawGame(
         if (p.type === 'leaf') {
             ctx.save();
             ctx.translate(p.x, p.y);
+            ctx.rotate((p.rotation || 0) * Math.PI / 180);
             ctx.fillStyle = p.color;
             ctx.globalAlpha = Math.max(0, p.lifespan / 2);
             ctx.beginPath();

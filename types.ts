@@ -100,6 +100,7 @@ export type ParticleState = {
   color: string;
   lifespan: number;
   type: 'rock' | 'water' | 'dust' | 'leaf';
+  rotation?: number;
 };
 
 export type GameDimensions = {

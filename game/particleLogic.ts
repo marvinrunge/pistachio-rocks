@@ -101,6 +101,7 @@ export function createSeasonalParticles(season: Season, gameWidth: number, delta
       color: ['#d97706', '#f59e0b', '#b45309'][Math.floor(Math.random() * 3)],
       lifespan: 10,
       type: 'leaf',
+      rotation: Math.random() * 360,
     });
   }
   return particlesToCreate;

@@ -177,3 +177,10 @@ app.get('/scores', async (req, res) => {
 
 // Expose Express API as a single Cloud Function
 exports.api = functions.https.onRequest(app);
+
+if (require.main === module) {
+    const port = process.env.PORT || 8080;
+    app.listen(port, () => {
+        console.log(`Server listening on port ${port}`);
+    });
+}
