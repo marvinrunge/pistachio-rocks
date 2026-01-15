@@ -46,6 +46,3 @@ export const MAX_PARTICLES = 150;
 // Versioning
 export const GAME_VERSION = '0.2.0';
 export const ARCHIVED_GAME_VERSIONS: string[] = ['0.1.0'];
-
-// Backend API
-export const LEADERBOARD_API_URL = 'https://us-west1-gen-lang-client-0224535657.cloudfunctions.net/pistachio-leaderboard-s7w6x0f3';
