@@ -329,7 +329,19 @@ const ChangeLogModal: React.FC<{ onBack: () => void; }> = ({ onBack }) => (
 
             <div className="overflow-y-auto px-4 sm:px-8 space-y-6 text-base sm:text-lg">
                 <div>
-                    <h3 className="font-bold text-xl sm:text-2xl text-lime-400 mb-2">Version 0.2.0 - The Graphics & Sound Update</h3>
+                    <h3 className="font-bold text-xl sm:text-2xl text-lime-400 mb-2">Version 0.2.1 - The Graphics & Sound Update</h3>
+                    <div className="pl-4">
+                        <h4 className="font-semibold text-lg sm:text-xl text-cyan-400 mt-3 mb-1">Gameplay</h4>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li><span className="font-bold text-lime-300">Quests:</span> Added a new quest system to the game. Collecting rain drops and smashing rocks will unlock rewards.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <hr className="my-4" />
+
+                <div>
+                    <h3 className="font-bold text-xl sm:text-2xl text-gray-400 mb-2">Version 0.2.0 - The Graphics & Sound Update</h3>
                     <div className="pl-4">
                         <h4 className="font-semibold text-lg sm:text-xl text-cyan-400 mt-3 mb-1">Art & Visuals</h4>
                         <ul className="list-disc list-inside space-y-1">
@@ -345,6 +357,8 @@ const ChangeLogModal: React.FC<{ onBack: () => void; }> = ({ onBack }) => (
                         </ul>
                     </div>
                 </div>
+
+                <hr className="my-4" />
 
                 <div>
                     <h3 className="font-bold text-xl sm:text-2xl text-gray-400 mb-2">Version 0.1.0</h3>

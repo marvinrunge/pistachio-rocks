@@ -4,7 +4,6 @@ import { useGameLogic } from './hooks/useGameLogic';
 import { GAME_HEIGHT, GAME_VERSION, ARCHIVED_GAME_VERSIONS } from './constants';
 import { toggleMute, getMuted } from './utils/audio';
 
-
 const App: React.FC = () => {
     const [gameDimensions, setGameDimensions] = useState({ width: 800, height: GAME_HEIGHT });
     const [uiTransform, setUiTransform] = useState({ scale: 1, x: 0, y: 0 });

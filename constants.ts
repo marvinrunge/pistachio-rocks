@@ -44,5 +44,5 @@ export const GOLDEN_TOUCH_CHANCE_INCREASE = 0.05; // 5% chance per level
 export const MAX_PARTICLES = 150;
 
 // Versioning
-export const GAME_VERSION = '0.2.0';
-export const ARCHIVED_GAME_VERSIONS: string[] = ['0.1.0'];
+export const GAME_VERSION = '0.2.1';
+export const ARCHIVED_GAME_VERSIONS: string[] = ['0.1.0', '0.2.0'];
