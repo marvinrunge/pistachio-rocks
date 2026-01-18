@@ -824,7 +824,8 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
                                 lifespan: 0.5,
                                 type: 'water',
                                 xVelocity: 0,
-                                yVelocity: -50
+                                yVelocity: -50,
+                                rotation: 0
                             });
                         }
 
