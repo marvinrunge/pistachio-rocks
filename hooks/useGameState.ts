@@ -7,8 +7,8 @@ import { getCharacterById, type Character } from '../game/characters/index';
 
 export const useGameState = (gameDimensions: { width: number, height: number }) => {
   const [clouds, setClouds] = useState<CloudState[]>([]);
-  
-  const [gameState, setGameState] = useState<{player: PlayerState, elements: ElementState[]}>({player: getInitialPlayerState('pistachio'), elements: []});
+
+  const [gameState, setGameState] = useState<{ player: PlayerState, elements: ElementState[] }>({ player: getInitialPlayerState('pistachio'), elements: [] });
   const [particles, setParticles] = useState<ParticleState[]>([]);
   const [floatingScores, setFloatingScores] = useState<FloatingScoreState[]>([]);
   const [floatingTexts, setFloatingTexts] = useState<FloatingTextState[]>([]);
@@ -26,7 +26,7 @@ export const useGameState = (gameDimensions: { width: number, height: number }) 
   const [acquiredSkills, setAcquiredSkills] = useState<Skill[]>([]);
   const [lastSubmissionResult, setLastSubmissionResult] = useState<SubmissionResult | null>(null);
   const [assetsReady, setAssetsReady] = useState(false);
-  
+
   const [selectedCharacterId, setSelectedCharacterId] = useState<CharacterId>(() => {
     try {
       return (localStorage.getItem('selectedCharacter') as CharacterId) || 'pistachio';
@@ -64,7 +64,7 @@ export const useGameState = (gameDimensions: { width: number, height: number }) 
     const selectedChar = getCharacterById(characterId);
     setCharacter(selectedChar);
 
-    setGameState({player: {...getInitialPlayerState(characterId), x: gameDimensions.width / 2}, elements: []});
+    setGameState({ player: { ...getInitialPlayerState(characterId), x: gameDimensions.width / 2 }, elements: [] });
     setParticles([]);
     setFloatingScores([]);
     setFloatingTexts([]);

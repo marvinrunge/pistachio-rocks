@@ -50,7 +50,7 @@ const HealthBar: React.FC<{ health: number, maxHealth: number }> = ({ health, ma
                 className={`h-full ${barColor} transition-all duration-75`}
                 style={{ width: `${percentage}%` }}
             />
-            <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white" style={{ textShadow: '1px 1px 2px black' }}>
+            <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white" style={{ textShadow: '1px 1px 2px black' }}>
                 {Math.round(health)} / {maxHealth}
             </div>
         </div>
@@ -62,7 +62,7 @@ const BigButton: React.FC<{ onClick?: (e?: React.MouseEvent) => void, children: 
         type={type}
         onClick={onClick}
         disabled={disabled}
-        className={`text-white font-bold py-2 px-4 sm:py-3 sm:px-6 border-b-4 rounded-lg text-lg sm:text-2xl transition-transform transform hover:scale-105 ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        className={`text-white font-bold py-2 px-4 sm:py-3 sm:px-6 border-b-4 rounded-lg text-sm sm:text-lg transition-transform transform hover:scale-105 ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}
     >
         {children}
@@ -108,7 +108,7 @@ const StatsDisplay: React.FC<{ stats: StatProps }> = ({ stats }) => {
     const skillsToDisplay = aggregatedSkills ? Object.values(aggregatedSkills) : [];
 
     return (
-        <div className="text-base sm:text-lg mb-6 w-full text-left bg-gray-900 p-3 sm:p-4 rounded-md">
+        <div className="text-sm sm:text-base mb-6 w-full text-left bg-gray-900 p-3 sm:p-4 rounded-md">
             <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                 <span className="font-bold text-gray-400">Final Score:</span><span className="text-white font-bold">{Math.floor(stats.score)}</span>
                 <span className="font-bold text-gray-400">Survived For:</span><span className="text-white whitespace-nowrap">{formatSurvivalTime(stats.year, stats.month)}</span>
@@ -122,7 +122,8 @@ const StatsDisplay: React.FC<{ stats: StatProps }> = ({ stats }) => {
                     <h4 className="font-bold text-gray-400 mb-2">Skills Acquired:</h4>
                     <div className="flex flex-wrap gap-2">
                         {skillsToDisplay.map(({ skill, count }) => (
-                            <span key={skill.id} className={`text-sm font-semibold px-2 py-1 rounded-md bg-gray-800 ${skill.color}`}>
+                            <span key={skill.id} className={`text-xs font-semibold px-2 py-1 rounded-md bg-gray-800 ${skill.color} flex items-center gap-1`}>
+                                <span>{skill.icon}</span>
                                 {skill.title} {count > 1 && `x${count}`}
                             </span>
                         ))}
@@ -138,7 +139,7 @@ const StartMenu: React.FC<{ onStart: () => void; onShowHighScores: () => void; o
     return (
         <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-auto">
             <div className="bg-gray-800/80 backdrop-blur-sm border-4 border-black p-4 sm:p-8 rounded-lg text-center shadow-lg w-full max-w-md mx-4">
-                <h2 className="text-4xl sm:text-6xl font-bold mb-6 sm:mb-8 text-lime-300" style={{ textShadow: '2px 2px 4px #1a2e05' }}>Pistachio</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-lime-300" style={{ textShadow: '2px 2px 4px #1a2e05' }}>Pistachio vs. Rocks</h2>
 
                 <div className="flex flex-col space-y-4">
                     <BigButton onClick={onStart} disabled={!assetsReady} className={GREEN_BUTTON_CLASSES}>
@@ -152,9 +153,9 @@ const StartMenu: React.FC<{ onStart: () => void; onShowHighScores: () => void; o
                         {assetsReady ? 'Change Character' : 'Loading...'}
                     </BigButton>
                     <div className="grid grid-cols-2 gap-4 pt-2">
-                        <BigButton onClick={onShowHighScores} className={`text-lg sm:text-xl ${GRAY_BUTTON_CLASSES}`}>High Scores</BigButton>
-                        <BigButton onClick={onShowInstructions} className={`text-lg sm:text-xl ${GRAY_BUTTON_CLASSES}`}>How to Play</BigButton>
-                        <BigButton onClick={onShowAbout} className={`text-lg sm:text-xl ${GRAY_BUTTON_CLASSES} col-span-2`}>About & Support</BigButton>
+                        <BigButton onClick={onShowHighScores} className={`text-base sm:text-lg ${GRAY_BUTTON_CLASSES}`}>High Scores</BigButton>
+                        <BigButton onClick={onShowInstructions} className={`text-base sm:text-lg ${GRAY_BUTTON_CLASSES}`}>How to Play</BigButton>
+                        <BigButton onClick={onShowAbout} className={`text-base sm:text-lg ${GRAY_BUTTON_CLASSES} col-span-2`}>About & Support</BigButton>
                     </div>
                 </div>
             </div>
@@ -247,7 +248,7 @@ const CharacterPreview: React.FC<{ characterId: CharacterId; assetsReady: boolea
 const CharacterSelectMenu: React.FC<{ onSelectCharacter: (id: CharacterId) => void; onBack: () => void, currentCharacterId: CharacterId, assetsReady: boolean }> = ({ onSelectCharacter, onBack, currentCharacterId, assetsReady }) => (
     <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-auto p-4">
         <div className="bg-gray-800 border-4 border-black rounded-lg text-center shadow-lg w-full max-w-md lg:max-w-xl flex flex-col max-h-full">
-            <h2 className="text-2xl sm:text-4xl font-bold p-4 sm:px-8 sm:pt-8 pb-4 flex-shrink-0">Select Character</h2>
+            <h2 className="text-xl sm:text-3xl font-bold p-4 sm:px-8 sm:pt-8 pb-4 flex-shrink-0">Select Character</h2>
             <div className="overflow-y-auto px-4 sm:px-8 py-4">
                 <div className="grid grid-cols-2 gap-4">
                     {CHARACTERS.map(char => (
@@ -260,7 +261,7 @@ const CharacterSelectMenu: React.FC<{ onSelectCharacter: (id: CharacterId) => vo
                                 <div className="w-full h-[120px] mb-2 rounded-md flex items-center justify-center overflow-hidden">
                                     <CharacterPreview characterId={char.id} assetsReady={assetsReady} />
                                 </div>
-                                <p className="font-bold text-base sm:text-lg">{char.name}</p>
+                                <p className="font-bold text-sm sm:text-base">{char.name}</p>
                             </div>
                         </button>
                     ))}
@@ -277,33 +278,33 @@ const CharacterSelectMenu: React.FC<{ onSelectCharacter: (id: CharacterId) => vo
 const InstructionsModal: React.FC<{ onBack: () => void; }> = ({ onBack }) => (
     <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-auto p-4">
         <div className="bg-gray-800 border-4 border-black rounded-lg text-left shadow-lg w-full max-w-md lg:max-w-2xl text-gray-300 flex flex-col max-h-full">
-            <h2 className="flex-shrink-0 text-2xl sm:text-4xl font-bold p-4 sm:px-8 sm:pt-8 pb-4 text-center text-white">How to Play</h2>
+            <h2 className="flex-shrink-0 text-xl sm:text-3xl font-bold p-4 sm:px-8 sm:pt-8 pb-4 text-center text-white">How to Play</h2>
 
-            <div className="overflow-y-auto px-4 sm:px-8 space-y-4 text-base sm:text-lg">
+            <div className="overflow-y-auto px-4 sm:px-8 space-y-4 text-sm sm:text-base">
                 <div>
-                    <h3 className="font-bold text-lg sm:text-2xl text-lime-400 mb-2">Goal</h3>
+                    <h3 className="font-bold text-base sm:text-xl text-lime-400 mb-2">Goal</h3>
                     <p>Survive for as long as possible! Brave the changing seasons and chaotic events like thunderstorms and blizzards. Collect water drops to repair your shell, and smash rocks by jumping into them to score points.</p>
                 </div>
 
                 <div>
-                    <h3 className="font-bold text-lg sm:text-2xl text-lime-400 mb-2">Controls</h3>
+                    <h3 className="font-bold text-base sm:text-xl text-lime-400 mb-2">Controls</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="bg-gray-900 p-3 sm:p-4 rounded-lg">
-                            <h4 className="font-semibold text-base sm:text-xl mb-2 text-white">Keyboard</h4>
+                            <h4 className="font-semibold text-sm sm:text-lg mb-2 text-white">Keyboard</h4>
                             <ul className="list-disc list-inside">
                                 <li><span className="font-bold text-lime-300">A / D</span> or <span className="font-bold text-lime-300">Arrow Keys</span> to move.</li>
                                 <li><span className="font-bold text-lime-300">W / Arrow Up / Space</span> to jump.</li>
                             </ul>
                         </div>
                         <div className="bg-gray-900 p-3 sm:p-4 rounded-lg">
-                            <h4 className="font-semibold text-base sm:text-xl mb-2 text-white">Touch</h4>
+                            <h4 className="font-semibold text-sm sm:text-lg mb-2 text-white">Touch</h4>
                             <ul className="list-disc list-inside">
                                 <li><span className="font-bold text-lime-300">Tap Left/Right</span> side of screen to move.</li>
                                 <li><span className="font-bold text-lime-300">Swipe Up</span> to jump.</li>
                             </ul>
                         </div>
                         <div className="bg-gray-900 p-3 sm:p-4 rounded-lg md:col-span-2">
-                            <h4 className="font-semibold text-base sm:text-xl mb-2 text-white">Gamepad</h4>
+                            <h4 className="font-semibold text-sm sm:text-lg mb-2 text-white">Gamepad</h4>
                             <ul className="list-disc list-inside">
                                 <li><span className="font-bold text-lime-300">D-Pad / Left Stick</span> to move.</li>
                                 <li><span className="font-bold text-lime-300">A / Bottom Face Button</span> to jump.</li>
@@ -313,7 +314,7 @@ const InstructionsModal: React.FC<{ onBack: () => void; }> = ({ onBack }) => (
                 </div>
 
                 <div>
-                    <h3 className="font-bold text-lg sm:text-2xl text-lime-400 mb-2">Progression</h3>
+                    <h3 className="font-bold text-base sm:text-xl text-lime-400 mb-2">Progression</h3>
                     <p>Survive for 30 seconds to advance to the next month and choose a powerful skill upgrade. Every 3 months, you'll face a dangerous weather event!</p>
                 </div>
             </div>
@@ -328,13 +329,13 @@ const InstructionsModal: React.FC<{ onBack: () => void; }> = ({ onBack }) => (
 const ChangeLogModal: React.FC<{ onBack: () => void; }> = ({ onBack }) => (
     <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-auto p-4">
         <div className="bg-gray-800 border-4 border-black rounded-lg text-left shadow-lg w-full max-w-md lg:max-w-2xl text-gray-300 flex flex-col max-h-full">
-            <h2 className="flex-shrink-0 text-2xl sm:text-4xl font-bold p-4 sm:px-8 sm:pt-8 pb-4 text-center text-white">Changelog</h2>
+            <h2 className="flex-shrink-0 text-xl sm:text-3xl font-bold p-4 sm:px-8 sm:pt-8 pb-4 text-center text-white">Changelog</h2>
 
-            <div className="overflow-y-auto px-4 sm:px-8 space-y-6 text-base sm:text-lg">
+            <div className="overflow-y-auto px-4 sm:px-8 space-y-6 text-sm sm:text-base">
                 <div>
-                    <h3 className="font-bold text-xl sm:text-2xl text-lime-400 mb-2">Version 0.2.1 - The Graphics & Sound Update</h3>
+                    <h3 className="font-bold text-lg sm:text-xl text-lime-400 mb-2">Version 0.2.1 - The Graphics & Sound Update</h3>
                     <div className="pl-4">
-                        <h4 className="font-semibold text-lg sm:text-xl text-cyan-400 mt-3 mb-1">Gameplay</h4>
+                        <h4 className="font-semibold text-base sm:text-lg text-cyan-400 mt-3 mb-1">Gameplay</h4>
                         <ul className="list-disc list-inside space-y-1">
                             <li><span className="font-bold text-lime-300">Achievements:</span> Added a new achievement system to the game. Collecting rain drops and smashing rocks will unlock rewards.</li>
                         </ul>
@@ -344,16 +345,16 @@ const ChangeLogModal: React.FC<{ onBack: () => void; }> = ({ onBack }) => (
                 <hr className="my-4" />
 
                 <div>
-                    <h3 className="font-bold text-xl sm:text-2xl text-gray-400 mb-2">Version 0.2.0 - The Graphics & Sound Update</h3>
+                    <h3 className="font-bold text-lg sm:text-xl text-gray-400 mb-2">Version 0.2.0 - The Graphics & Sound Update</h3>
                     <div className="pl-4">
-                        <h4 className="font-semibold text-lg sm:text-xl text-cyan-400 mt-3 mb-1">Art & Visuals</h4>
+                        <h4 className="font-semibold text-base sm:text-lg text-cyan-400 mt-3 mb-1">Art & Visuals</h4>
                         <ul className="list-disc list-inside space-y-1">
                             <li><span className="font-bold text-lime-300">Major Character Art Overhaul:</span> Pistachio and Walnut have been completely redesigned with high-quality vector artwork.</li>
                             <li><span className="font-bold text-lime-300">Enhanced Character Previews:</span> The character selection screen now features much larger, more detailed previews.</li>
                             <li><span className="font-bold text-lime-300">Refined Particle Effects:</span> Reduced the number of particles from smashing rocks for a cleaner look.</li>
                             <li><span className="font-bold text-lime-300">Improved Water Effects:</span> Water drops now create a more realistic splash of small, white particles.</li>
                         </ul>
-                        <h4 className="font-semibold text-lg sm:text-xl text-cyan-400 mt-4 mb-1">Audio</h4>
+                        <h4 className="font-semibold text-base sm:text-lg text-cyan-400 mt-4 mb-1">Audio</h4>
                         <ul className="list-disc list-inside space-y-1">
                             <li><span className="font-bold text-lime-300">More Audio Variety:</span> Added multiple new rock impact sounds and randomized the pitch of every impact to make the soundscape less repetitive.</li>
                             <li><span className="font-bold text-lime-300">Sound Effect Tuning:</span> Replaced the old deep "thud" sound for a more satisfying and balanced audio experience.</li>
@@ -364,7 +365,7 @@ const ChangeLogModal: React.FC<{ onBack: () => void; }> = ({ onBack }) => (
                 <hr className="my-4" />
 
                 <div>
-                    <h3 className="font-bold text-xl sm:text-2xl text-gray-400 mb-2">Version 0.1.0</h3>
+                    <h3 className="font-bold text-lg sm:text-xl text-gray-400 mb-2">Version 0.1.0</h3>
                     <ul className="list-disc list-inside pl-4 space-y-1">
                         <li>Initial public release of the game.</li>
                     </ul>
@@ -381,14 +382,14 @@ const ChangeLogModal: React.FC<{ onBack: () => void; }> = ({ onBack }) => (
 const AboutModal: React.FC<{ onBack: () => void; onShowChangelog: () => void; }> = ({ onBack, onShowChangelog }) => (
     <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-auto p-4">
         <div className="bg-gray-800 border-4 border-black rounded-lg text-left shadow-lg w-full max-w-md lg:max-w-2xl text-gray-300 flex flex-col max-h-full">
-            <h2 className="flex-shrink-0 text-2xl sm:text-4xl font-bold p-4 sm:px-8 sm:pt-8 pb-4 text-center text-white">About Pistachio</h2>
+            <h2 className="flex-shrink-0 text-xl sm:text-3xl font-bold p-4 sm:px-8 sm:pt-8 pb-4 text-center text-white">About Pistachio</h2>
 
-            <div className="overflow-y-auto px-4 sm:px-8 space-y-4 text-base sm:text-lg">
+            <div className="overflow-y-auto px-4 sm:px-8 space-y-4 text-sm sm:text-base">
                 <p>
                     The goal is to survive as long as you can against an endless barrage of rocks, while navigating chaotic weather events through the changing seasons. Level up, choose powerful skills, and climb the global leaderboard!
                 </p>
                 <div className="flex justify-center pt-2">
-                    <BigButton onClick={onShowChangelog} className={`text-lg sm:text-xl ${GRAY_BUTTON_CLASSES}`}>View Changelog</BigButton>
+                    <BigButton onClick={onShowChangelog} className={`text-base sm:text-lg ${GRAY_BUTTON_CLASSES}`}>View Changelog</BigButton>
                 </div>
                 <p className="pt-2 text-center">
                     If you enjoy the game, please consider supporting its development. Thank you!
@@ -398,7 +399,7 @@ const AboutModal: React.FC<{ onBack: () => void; onShowChangelog: () => void; }>
                         href="https://www.paypal.com/paypalme/marvinrunge"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 sm:py-3 sm:px-6 border-b-4 border-green-800 hover:border-green-700 rounded-lg text-lg sm:text-2xl transition-transform transform hover:scale-105"
+                        className="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 sm:py-3 sm:px-6 border-b-4 border-green-800 hover:border-green-700 rounded-lg text-base sm:text-xl transition-transform transform hover:scale-105"
                         style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}
                     >
                         ❤️ Support the Developer
@@ -446,7 +447,7 @@ const HighScoreModal: React.FC<{
             <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-auto p-4">
                 <div className="bg-gray-800 border-4 border-black rounded-lg text-center shadow-lg w-full max-w-md lg:max-w-2xl flex flex-col max-h-full text-white">
                     <div className="flex-shrink-0 p-4 sm:px-8 sm:pt-8 pb-4 flex items-center justify-between">
-                        <h2 className="text-2xl sm:text-4xl font-bold">High Scores</h2>
+                        <h2 className="text-xl sm:text-3xl font-bold">High Scores</h2>
                         <div>
                             <label htmlFor="season-select" className="text-sm font-bold text-gray-400 mr-2">Season:</label>
                             <select
@@ -462,7 +463,7 @@ const HighScoreModal: React.FC<{
                             </select>
                         </div>
                     </div>
-                    <div className="overflow-y-auto px-4 sm:px-8 text-sm sm:text-lg">
+                    <div className="overflow-y-auto px-4 sm:px-8 text-xs sm:text-base">
                         {leaderboardState === 'loading' && <p className="text-gray-400 my-8">Loading scores...</p>}
                         {leaderboardState === 'error' && <p className="text-red-400 my-4 text-center">Could not load global scores. Showing local fallback.</p>}
 
@@ -525,17 +526,20 @@ const HighScoreModal: React.FC<{
 const HighScoreDetailModal: React.FC<{ score: HighScoreEntry, onBack: () => void }> = ({ score, onBack }) => (
     <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-auto p-4">
         <div className="bg-gray-800 border-4 border-black rounded-lg text-center shadow-lg w-full max-w-md flex flex-col max-h-full text-white">
-            <h2 className="text-xl sm:text-3xl font-bold p-4 sm:p-6 pb-2 flex-shrink-0">{score.name}'s Run</h2>
+            <h2 className="text-lg sm:text-2xl font-bold p-4 sm:p-6 pb-2 flex-shrink-0">{score.name}'s Run</h2>
             <div className="overflow-y-auto px-4 sm:px-6 py-2">
                 <StatsDisplay stats={{ ...score, finalSpeed: score.finalSpeed }} />
 
                 {score.completedAchievements && score.completedAchievements.length > 0 && (
                     <div className="mt-4 text-left border-t border-white/10 pt-4 pb-4">
-                        <h3 className="text-lg font-bold mb-2 text-yellow-400">Achievements</h3>
+                        <h3 className="text-base font-bold mb-2 text-yellow-400">Achievements</h3>
                         <div className="space-y-2">
                             {score.completedAchievements.map((achievement) => (
                                 <div key={achievement.id} className="bg-black/30 p-2 rounded border border-white/10 flex justify-between items-center">
-                                    <span className="font-bold text-sm text-lime-400">{achievement.title}</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-lg">{achievement.icon}</span>
+                                        <span className="font-bold text-sm text-lime-400">{achievement.title}</span>
+                                    </div>
                                     <span className="text-[10px] font-black bg-yellow-400 text-black px-1 py-0.5 rounded leading-none">LVL {achievement.level - 1}</span>
                                 </div>
                             ))}
@@ -591,21 +595,24 @@ const GameOverModal: React.FC<{ score: number, onSave: (name: string) => Promise
     return (
         <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-auto p-4">
             <div className="bg-gray-800 border-4 border-black rounded-lg text-center shadow-lg w-full max-w-md flex flex-col max-h-full">
-                <h2 className="text-2xl sm:text-4xl font-bold p-4 sm:p-6 pb-2 flex-shrink-0">Game Over</h2>
+                <h2 className="text-xl sm:text-3xl font-bold p-4 sm:p-6 pb-2 flex-shrink-0">Game Over</h2>
                 <div className="overflow-y-auto px-4 sm:px-6 py-4">
                     <StatsDisplay stats={finalStats} />
 
                     {finalStats.completedAchievements && finalStats.completedAchievements.length > 0 && (
                         <div className="mt-6 text-left">
-                            <h3 className="text-xl font-bold mb-3 text-yellow-400 border-b border-yellow-400/30 pb-1">Achievements</h3>
+                            <h3 className="text-lg font-bold mb-3 text-yellow-400 border-b border-yellow-400/30 pb-1">Achievements</h3>
                             <div className="space-y-3">
                                 {finalStats.completedAchievements.map((achievement) => (
                                     <div key={achievement.id} className="bg-black/30 p-3 rounded-lg border border-white/10">
                                         <div className="flex justify-between items-center mb-1">
-                                            <span className="font-bold text-lime-400">{achievement.title}</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xl">{achievement.icon}</span>
+                                                <span className="font-bold text-lime-400">{achievement.title}</span>
+                                            </div>
                                             <span className="text-xs font-black bg-yellow-400 text-black px-1.5 py-0.5 rounded">LEVEL {achievement.level - 1}</span>
                                         </div>
-                                        <p className="text-xs text-gray-400 leading-relaxed italic">
+                                        <p className="text-xs text-gray-400 leading-relaxed italic pl-8">
                                             {achievement.id === 'rainDancer' && `Mastered the art of water collection! Reached ${achievement.target / 2} drops.`}
                                             {achievement.id === 'rockBreaker' && `Demolished ${achievement.target / 2} rocks with pure force.`}
                                             {achievement.id === 'shellEvader' && `Survived the impossible ${achievement.target} times.`}
@@ -623,7 +630,7 @@ const GameOverModal: React.FC<{ score: number, onSave: (name: string) => Promise
                             onChange={(e) => setName(e.target.value)}
                             maxLength={12}
                             placeholder="Enter your name"
-                            className="bg-gray-900 text-white text-base sm:text-xl p-2 sm:p-3 rounded-md w-full mb-4 border-2 border-gray-600 focus:border-lime-500 focus:outline-none"
+                            className="bg-gray-900 text-white text-sm sm:text-lg p-2 sm:p-3 rounded-md w-full mb-4 border-2 border-gray-600 focus:border-lime-500 focus:outline-none"
                         />
                         <div className="grid grid-cols-2 gap-4">
                             <BigButton
@@ -650,16 +657,19 @@ const GameOverModal: React.FC<{ score: number, onSave: (name: string) => Promise
 const LevelUpModal: React.FC<{ skills: Skill[], onSelect: (skillId: string) => void }> = ({ skills, onSelect }) => (
     <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-auto p-4">
         <div className="bg-gray-800 border-4 border-black rounded-lg text-center shadow-lg w-full max-w-lg flex flex-col max-h-full">
-            <h2 className="text-2xl sm:text-4xl font-bold p-4 sm:p-6 flex-shrink-0">Choose an Upgrade</h2>
+            <h2 className="text-xl sm:text-3xl font-bold p-4 sm:p-6 flex-shrink-0">Choose an Upgrade</h2>
             <div className="overflow-y-auto px-4 sm:px-6 py-4 flex flex-col space-y-4">
                 {skills.map(skill => (
                     <button
                         key={skill.id}
                         onClick={() => onSelect(skill.id)}
-                        className={`p-3 sm:p-4 border-2 border-black rounded-lg text-left transition-transform transform hover:scale-105 bg-gray-900 hover:bg-gray-700`}
+                        className={`p-3 sm:p-4 border-2 border-black rounded-lg text-left transition-transform transform hover:scale-105 bg-gray-900 hover:bg-gray-700 flex items-start gap-3`}
                     >
-                        <h3 className={`text-base sm:text-xl font-bold ${skill.color}`}>{skill.title}</h3>
-                        <p className="text-sm sm:text-base text-gray-300">{skill.description}</p>
+                        <div className="text-2xl sm:text-3xl bg-black/30 p-2 rounded-lg">{skill.icon}</div>
+                        <div>
+                            <h3 className={`text-sm sm:text-lg font-bold ${skill.color}`}>{skill.title}</h3>
+                            <p className="text-xs sm:text-sm text-gray-300">{skill.description}</p>
+                        </div>
                     </button>
                 ))}
             </div>
@@ -775,7 +785,7 @@ export const GameUI = React.memo<GameUIProps>(({ status, health, maxHealth, scor
             {/* Main Stats HUD */}
             <div className="flex flex-wrap items-center justify-between gap-4 bg-black/50 p-2 rounded-lg border-2 border-black/30">
                 <HealthBar health={health} maxHealth={maxHealth} />
-                <div className="flex items-center space-x-2 sm:space-x-4 text-sm sm:text-lg">
+                <div className="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-base">
                     <span>Score: <span className="font-bold text-yellow-300">{Math.floor(score)}</span></span>
                     <span className="hidden lg:inline">|</span>
                     <span className="hidden lg:inline">Year: <span className="font-bold">{year}</span></span>
@@ -784,7 +794,7 @@ export const GameUI = React.memo<GameUIProps>(({ status, health, maxHealth, scor
                     <span>|</span>
                     <span className={`capitalize font-bold ${seasonColors[season]}`}>{seasonIcons[season]} <span className="hidden sm:inline">{season}</span></span>
                 </div>
-                <div className="flex items-center space-x-2 text-sm sm:text-lg">
+                <div className="flex items-center space-x-2 text-xs sm:text-base">
                     {extraLives > 0 && <span>❤️ <span className="font-bold text-yellow-400">x{extraLives}</span></span>}
                     <span>Time Left: <span className="font-bold text-cyan-300">{timeLeft.toFixed(1)}s</span></span>
                 </div>
