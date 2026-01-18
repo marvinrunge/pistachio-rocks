@@ -333,11 +333,21 @@ const ChangeLogModal: React.FC<{ onBack: () => void; }> = ({ onBack }) => (
 
             <div className="overflow-y-auto px-4 sm:px-8 space-y-6 text-sm sm:text-base">
                 <div>
-                    <h3 className="font-bold text-lg sm:text-xl text-lime-400 mb-2">Version 0.2.1 - The Graphics & Sound Update</h3>
+                    <h3 className="font-bold text-lg sm:text-xl text-lime-400 mb-2">Version 0.3.0 - Achievements</h3>
                     <div className="pl-4">
                         <h4 className="font-semibold text-base sm:text-lg text-cyan-400 mt-3 mb-1">Gameplay</h4>
                         <ul className="list-disc list-inside space-y-1">
-                            <li><span className="font-bold text-lime-300">Achievements:</span> Added a new achievement system to the game. Collecting rain drops and smashing rocks will unlock rewards.</li>
+                            <li><span className="font-bold text-lime-300">Achievements:</span> Added a new achievement system to the game. Get rewards by reaching hidden milestones.</li>
+                            <li><span className="font-bold text-lime-300">Movement Speed:</span> The base movement speed of the player is now slower to make agility more valuable.</li>
+                        </ul>
+                        <h4 className="font-semibold text-base sm:text-lg text-cyan-400 mt-3 mb-1">Art & Visuals</h4>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li><span className="font-bold text-lime-300">Grass:</span> Grass now has a more detailed texture and a better color palette.</li>
+                            <li><span className="font-bold text-lime-300">Iceblock:</span> When player gets frozen, an iceblock will appear.</li>
+                        </ul>
+                        <h4 className="font-semibold text-base sm:text-lg text-cyan-400 mt-3 mb-1">Bugfixes</h4>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li><span className="font-bold text-lime-300">Stone Shell:</span> When 90% max is reached, the skill dissappears from skill list.</li>
                         </ul>
                     </div>
                 </div>

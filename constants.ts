@@ -12,7 +12,7 @@ export const INITIAL_MAX_HEALTH = 20;
 
 // New Player Physics properties
 export const PLAYER_ACCELERATION = 1200; // pixels per second^2
-export const MAX_PLAYER_SPEED = 180; // pixels per second
+export const MAX_PLAYER_SPEED = 160; // pixels per second
 export const GROUND_FRICTION = 1200; // pixels per second^2
 export const ICE_FRICTION = 100; // Much lower friction for blizzard event
 export const WIND_FORCE = 400; // a constant force during storm events
@@ -45,5 +45,5 @@ export const GOLDEN_TOUCH_CHANCE_INCREASE = 0.05; // 5% chance per level
 export const MAX_PARTICLES = 800;
 
 // Versioning
-export const GAME_VERSION = '0.2.1';
-export const ARCHIVED_GAME_VERSIONS: string[] = ['0.1.0', '0.2.0'];
+export const GAME_VERSION = '0.3.0';
+export const ARCHIVED_GAME_VERSIONS: string[] = ['0.1.0', '0.2.0', '0.3.0'];
