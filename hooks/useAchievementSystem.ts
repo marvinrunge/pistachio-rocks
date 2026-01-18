@@ -17,7 +17,8 @@ const getInitialAchievements = (): AchievementState[] => [
         progress: 0,
         target: RAIN_DANCER_TARGET,
         level: 1,
-        isCompleted: false
+        isCompleted: false,
+        icon: '🌧️'
     },
     {
         id: 'rockBreaker',
@@ -25,7 +26,8 @@ const getInitialAchievements = (): AchievementState[] => [
         progress: 0,
         target: ROCK_BREAKER_TARGET,
         level: 1,
-        isCompleted: false
+        isCompleted: false,
+        icon: '🔨'
     },
     {
         id: 'shellEvader',
@@ -33,7 +35,8 @@ const getInitialAchievements = (): AchievementState[] => [
         progress: 0,
         target: SHELL_RECOVERY_TARGET,
         level: 1,
-        isCompleted: false
+        isCompleted: false,
+        icon: '👻'
     }
 ];
 

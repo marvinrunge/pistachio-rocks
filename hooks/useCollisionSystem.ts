@@ -139,7 +139,7 @@ export const useCollisionSystem = ({
                     });
 
                     if (el.type === 'meteor') playMeteorImpactSound();
-                    else playImpactSound(el.size);
+                    else playImpactSound(el.size, 1.0);
 
                     particlesToCreate.push(...createRockParticles(el, isGolden));
 

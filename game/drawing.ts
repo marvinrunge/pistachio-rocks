@@ -4,11 +4,11 @@ import { PLAYER_WIDTH, PLAYER_HEIGHT, GAME_HEIGHT, GROUND_HEIGHT } from '../cons
 import { groundDetails } from './state';
 import { darken } from './utils';
 
-export function drawPlayer(ctx: CanvasRenderingContext2D, player: PlayerState, shellBreakAnimation: ShellBreakAnimationState | null, character: Character, maxHealth: number, shellReformAnimation: ShellReformAnimationState | null) {
+export function drawPlayer(ctx: CanvasRenderingContext2D, player: PlayerState, shellBreakAnimation: ShellBreakAnimationState | null, character: Character, maxHealth: number, shellReformAnimation: ShellReformAnimationState | null, isSlowed: boolean) {
     // The character drawing functions expect the top-left coordinate of the shelled character's bounding box.
     // We calculate the Y position based on the game's coordinate system (where Y=0 is the ground).
     const playerCanvasY = GAME_HEIGHT - player.y - character.hitbox.shelled.height;
-    character.draw(ctx, player.x, playerCanvasY, player, shellBreakAnimation, maxHealth, shellReformAnimation);
+    character.draw(ctx, player.x, playerCanvasY, player, shellBreakAnimation, maxHealth, shellReformAnimation, isSlowed);
 }
 
 export function drawRainingElement(ctx: CanvasRenderingContext2D, el: ElementState, season: Season) {
@@ -401,6 +401,7 @@ export function drawGame(
     lightningStrikes: LightningStrike[],
     screenFlash: number,
     currentFrameTime: number,
+    isSlowed: boolean
 ) {
     const clientWidth = gameDimensions.width * renderContext.scale;
     const clientHeight = gameDimensions.height * renderContext.scale;
@@ -519,7 +520,7 @@ export function drawGame(
     });
 
     if (gameStatus === 'playing') {
-        drawPlayer(ctx, gameState.player, shellBreakAnimation, character, maxHealth, shellReformAnimation);
+        drawPlayer(ctx, gameState.player, shellBreakAnimation, character, maxHealth, shellReformAnimation, isSlowed);
 
         // Draw Seismic Slam Indicator (Electric Sparks)
         if (gameState.player.seismicSlamReady) {

@@ -719,7 +719,7 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
                                 lifespan: 3.0
                             });
                         } else {
-                            playImpactSound(el.size);
+                            playImpactSound(el.size, 0.2);
                         }
                         particlesToCreate.push(...createRockParticles({ ...el, y: GAME_HEIGHT - GROUND_HEIGHT - el.size }));
                     } else if (el.type === 'water' || el.type === 'snow') {
@@ -900,7 +900,8 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
             floatingTexts,
             lightningStrikes,
             screenFlash,
-            currentFrameTime
+            currentFrameTime,
+            playerSlowTimer > 0
         );
 
     }, [

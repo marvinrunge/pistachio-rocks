@@ -109,7 +109,7 @@ export const playDamageSound = () => {
 /**
  * Plays a crunchy impact sound.
  */
-const playImpactSoundCrunch = (size?: number) => {
+const playImpactSoundCrunch = (size?: number, volume: number = 1.0) => {
     if (!audioContext) return;
 
     const bufferSize = audioContext.sampleRate * 0.1; // 0.1 seconds
@@ -149,7 +149,7 @@ const playImpactSoundCrunch = (size?: number) => {
 
     gainNode.gain.setValueAtTime(0, now);
     // Add random variation to the volume for a less repetitive sound
-    gainNode.gain.linearRampToValueAtTime(0.4 + Math.random() * 0.2, now + 0.01);
+    gainNode.gain.linearRampToValueAtTime((0.4 + Math.random() * 0.2) * volume, now + 0.01);
     gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
 
     noise.connect(gainNode);
@@ -161,7 +161,7 @@ const playImpactSoundCrunch = (size?: number) => {
 /**
  * Plays a lower-pitched, crunchy impact sound for more variety.
  */
-const playImpactSoundCrunchLower = (size?: number) => {
+const playImpactSoundCrunchLower = (size?: number, volume: number = 1.0) => {
     if (!audioContext) return;
 
     const bufferSize = audioContext.sampleRate * 0.12; // a bit longer for lower sound
@@ -199,7 +199,7 @@ const playImpactSoundCrunchLower = (size?: number) => {
 
     gainNode.gain.setValueAtTime(0, now);
     // Add random variation to the volume for a less repetitive sound
-    gainNode.gain.linearRampToValueAtTime(0.5 + Math.random() * 0.2, now + 0.01); // Slightly higher gain for a "heavy" feel
+    gainNode.gain.linearRampToValueAtTime((0.5 + Math.random() * 0.2) * volume, now + 0.01); // Slightly higher gain for a "heavy" feel
     gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
 
     noise.connect(gainNode);
@@ -212,7 +212,7 @@ const playImpactSoundCrunchLower = (size?: number) => {
 /**
  * Plays a sharp, cracking impact sound.
  */
-const playImpactSoundCrack = (size?: number) => {
+const playImpactSoundCrack = (size?: number, volume: number = 1.0) => {
     if (!audioContext) return;
     const now = audioContext.currentTime;
 
@@ -236,7 +236,7 @@ const playImpactSoundCrack = (size?: number) => {
     // Sharp volume envelope
     const gainNode = audioContext.createGain();
     gainNode.gain.setValueAtTime(0, now);
-    gainNode.gain.linearRampToValueAtTime(0.5, now + 0.005);
+    gainNode.gain.linearRampToValueAtTime(0.5 * volume, now + 0.005);
     gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
 
     // Pitch variation
@@ -255,7 +255,7 @@ const playImpactSoundCrack = (size?: number) => {
 /**
  * Plays a second, slightly different cracking sound for variety.
  */
-const playImpactSoundCrackAlternate = (size?: number) => {
+const playImpactSoundCrackAlternate = (size?: number, volume: number = 1.0) => {
     if (!audioContext) return;
     const now = audioContext.currentTime;
 
@@ -279,7 +279,7 @@ const playImpactSoundCrackAlternate = (size?: number) => {
     // Sharp volume envelope
     const gainNode = audioContext.createGain();
     gainNode.gain.setValueAtTime(0, now);
-    gainNode.gain.linearRampToValueAtTime(0.6, now + 0.005);
+    gainNode.gain.linearRampToValueAtTime(0.6 * volume, now + 0.005);
     gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
 
     // Pitch variation
@@ -300,12 +300,12 @@ const playImpactSoundCrackAlternate = (size?: number) => {
  * Plays a varied, crunchy/crackly impact sound for when an element hits the ground or the player.
  * Randomly selects from several impact sound types for variety.
  */
-export const playImpactSound = (size?: number) => {
+export const playImpactSound = (size?: number, volume: number = 1.0) => {
     if (!audioContext) return;
 
     const soundFunctions = [playImpactSoundCrunch, playImpactSoundCrunchLower, playImpactSoundCrack, playImpactSoundCrackAlternate];
     const randomIndex = Math.floor(Math.random() * soundFunctions.length);
-    soundFunctions[randomIndex](size);
+    soundFunctions[randomIndex](size, volume);
 };
 
 /**

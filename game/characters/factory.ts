@@ -26,7 +26,8 @@ export type Character = {
         player: PlayerState,
         shellBreakAnimation: ShellBreakAnimationState | null,
         maxHealth: number,
-        shellReformAnimation: ShellReformAnimationState | null
+        shellReformAnimation: ShellReformAnimationState | null,
+        isSlowed?: boolean
     ) => void;
 };
 
@@ -41,7 +42,8 @@ export const createDrawFunction = (
         player: PlayerState,
         shellBreakAnimation: ShellBreakAnimationState | null,
         maxHealth: number,
-        shellReformAnimation: ShellReformAnimationState | null
+        shellReformAnimation: ShellReformAnimationState | null,
+        isSlowed: boolean = false
     ) => {
         const assets = assetManager.getCharacterAssets(characterId);
         // Ensure assets and their dimensions are loaded before drawing
@@ -136,6 +138,52 @@ export const createDrawFunction = (
                 ctx.drawImage(shellRight, drawX + reformOffsetX, drawY, drawWidth, drawHeight);
                 ctx.restore();
             }
+        }
+
+        // --- 3. Draw Ice Overlay (if slowed) ---
+        if (isSlowed) {
+            ctx.save();
+            ctx.fillStyle = 'rgba(173, 216, 230, 0.6)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.lineWidth = 2;
+
+            // Draw a rounded rectangle around the character
+            const padding = 5;
+            const overlayX = drawX - padding;
+            const overlayY = drawY - padding;
+            const overlayWidth = drawWidth + padding * 2;
+            const overlayHeight = drawHeight + padding * 2;
+            const radius = 10;
+
+            ctx.beginPath();
+            ctx.moveTo(overlayX + radius, overlayY);
+            ctx.lineTo(overlayX + overlayWidth - radius, overlayY);
+            ctx.quadraticCurveTo(overlayX + overlayWidth, overlayY, overlayX + overlayWidth, overlayY + radius);
+            ctx.lineTo(overlayX + overlayWidth, overlayY + overlayHeight - radius);
+            ctx.quadraticCurveTo(overlayX + overlayWidth, overlayY + overlayHeight, overlayX + overlayWidth - radius, overlayY + overlayHeight);
+            ctx.lineTo(overlayX + radius, overlayY + overlayHeight);
+            ctx.quadraticCurveTo(overlayX, overlayY + overlayHeight, overlayX, overlayY + overlayHeight - radius);
+            ctx.lineTo(overlayX, overlayY + radius);
+            ctx.quadraticCurveTo(overlayX, overlayY, overlayX + radius, overlayY);
+            ctx.closePath();
+
+            ctx.fill();
+            ctx.stroke();
+
+            // Add some "glint" lines for ice effect
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(overlayX + 10, overlayY + 10);
+            ctx.lineTo(overlayX + 20, overlayY + 25);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(overlayX + overlayWidth - 15, overlayY + overlayHeight - 25);
+            ctx.lineTo(overlayX + overlayWidth - 10, overlayY + overlayHeight - 10);
+            ctx.stroke();
+
+            ctx.restore();
         }
     };
 };
