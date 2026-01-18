@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { Skill, Season, HighScoreEntry, SubmissionResult, CharacterId, GameStatus, PlayerState } from '../types';
+import type { Skill, Season, HighScoreEntry, SubmissionResult, CharacterId, GameStatus, PlayerState, AchievementState } from '../types';
 import { MAX_PLAYER_SPEED } from '../constants';
 import { loadPlayerName } from '../utils/storage';
 import { CHARACTERS, getCharacterById } from '../game/characters/index';
@@ -35,6 +35,7 @@ interface GameUIProps {
     gameVersion: string;
     archivedVersions: string[];
     assetsReady: boolean;
+    achievements?: AchievementState[];
 }
 
 const HealthBar: React.FC<{ health: number, maxHealth: number }> = ({ health, maxHealth }) => {
@@ -70,6 +71,7 @@ const BigButton: React.FC<{ onClick?: (e?: React.MouseEvent) => void, children: 
 
 type StatProps = Pick<HighScoreEntry, 'score' | 'year' | 'month' | 'rocksDestroyed' | 'maxHealth' | 'finalSpeed' | 'characterId'> & {
     acquiredSkills?: Skill[];
+    completedAchievements?: AchievementState[];
 };
 
 const formatSurvivalTime = (year: number, month: number) => {
@@ -197,6 +199,7 @@ const CharacterPreview: React.FC<{ characterId: CharacterId; assetsReady: boolea
                 health: 999,
                 isNaked: false,
                 characterId: character.id,
+                shellRecoveries: 0,
             };
 
             const scale = Math.min(
@@ -333,7 +336,7 @@ const ChangeLogModal: React.FC<{ onBack: () => void; }> = ({ onBack }) => (
                     <div className="pl-4">
                         <h4 className="font-semibold text-lg sm:text-xl text-cyan-400 mt-3 mb-1">Gameplay</h4>
                         <ul className="list-disc list-inside space-y-1">
-                            <li><span className="font-bold text-lime-300">Quests:</span> Added a new quest system to the game. Collecting rain drops and smashing rocks will unlock rewards.</li>
+                            <li><span className="font-bold text-lime-300">Achievements:</span> Added a new achievement system to the game. Collecting rain drops and smashing rocks will unlock rewards.</li>
                         </ul>
                     </div>
                 </div>
@@ -525,6 +528,20 @@ const HighScoreDetailModal: React.FC<{ score: HighScoreEntry, onBack: () => void
             <h2 className="text-xl sm:text-3xl font-bold p-4 sm:p-6 pb-2 flex-shrink-0">{score.name}'s Run</h2>
             <div className="overflow-y-auto px-4 sm:px-6 py-2">
                 <StatsDisplay stats={{ ...score, finalSpeed: score.finalSpeed }} />
+
+                {score.completedAchievements && score.completedAchievements.length > 0 && (
+                    <div className="mt-4 text-left border-t border-white/10 pt-4 pb-4">
+                        <h3 className="text-lg font-bold mb-2 text-yellow-400">Achievements</h3>
+                        <div className="space-y-2">
+                            {score.completedAchievements.map((achievement) => (
+                                <div key={achievement.id} className="bg-black/30 p-2 rounded border border-white/10 flex justify-between items-center">
+                                    <span className="font-bold text-sm text-lime-400">{achievement.title}</span>
+                                    <span className="text-[10px] font-black bg-yellow-400 text-black px-1 py-0.5 rounded leading-none">LVL {achievement.level - 1}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
             <div className="p-4 sm:p-6 pt-2 flex-shrink-0">
                 <BigButton onClick={onBack} className={`${GRAY_BUTTON_CLASSES} w-full`}>Back</BigButton>
@@ -577,7 +594,29 @@ const GameOverModal: React.FC<{ score: number, onSave: (name: string) => Promise
                 <h2 className="text-2xl sm:text-4xl font-bold p-4 sm:p-6 pb-2 flex-shrink-0">Game Over</h2>
                 <div className="overflow-y-auto px-4 sm:px-6 py-4">
                     <StatsDisplay stats={finalStats} />
-                    <form onSubmit={handleSubmit} className="mt-4">
+
+                    {finalStats.completedAchievements && finalStats.completedAchievements.length > 0 && (
+                        <div className="mt-6 text-left">
+                            <h3 className="text-xl font-bold mb-3 text-yellow-400 border-b border-yellow-400/30 pb-1">Achievements</h3>
+                            <div className="space-y-3">
+                                {finalStats.completedAchievements.map((achievement) => (
+                                    <div key={achievement.id} className="bg-black/30 p-3 rounded-lg border border-white/10">
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span className="font-bold text-lime-400">{achievement.title}</span>
+                                            <span className="text-xs font-black bg-yellow-400 text-black px-1.5 py-0.5 rounded">LEVEL {achievement.level - 1}</span>
+                                        </div>
+                                        <p className="text-xs text-gray-400 leading-relaxed italic">
+                                            {achievement.id === 'rainDancer' && `Mastered the art of water collection! Reached ${achievement.target / 2} drops.`}
+                                            {achievement.id === 'rockBreaker' && `Demolished ${achievement.target / 2} rocks with pure force.`}
+                                            {achievement.id === 'shellEvader' && `Survived the impossible ${achievement.target} times.`}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <form onSubmit={handleSubmit} className="mt-6 border-t border-white/10 pt-6">
                         <input
                             type="text"
                             value={name}
@@ -674,7 +713,7 @@ const seasonIcons: Record<Season, string> = {
     winter: '❄️',
 };
 
-export const GameUI = React.memo<GameUIProps>(({ status, health, maxHealth, score, onStart, difficultyLevel, timeInMonth, availableSkills, onSelectSkill, season, rocksDestroyed, playerSpeed, onSaveScore, highScores, onShowHighScores, onShowInstructions, onShowAbout, onBackToMenu, extraLives, acquiredSkills, leaderboardState, lastSubmissionResult, characterId, onShowCharacterSelect, onSelectCharacter, onStartDebugGame, onFetchVersionScores, gameVersion, archivedVersions, assetsReady }) => {
+export const GameUI = React.memo<GameUIProps>(({ status, health, maxHealth, score, onStart, difficultyLevel, timeInMonth, availableSkills, onSelectSkill, season, rocksDestroyed, playerSpeed, onSaveScore, highScores, onShowHighScores, onShowInstructions, onShowAbout, onBackToMenu, extraLives, acquiredSkills, leaderboardState, lastSubmissionResult, characterId, onShowCharacterSelect, onSelectCharacter, onStartDebugGame, onFetchVersionScores, gameVersion, archivedVersions, assetsReady, achievements }) => {
 
     const [selectedHighScoreId, setSelectedHighScoreId] = useState<number | null>(null);
     const [showDebugMenu, setShowDebugMenu] = useState(false);
@@ -719,7 +758,11 @@ export const GameUI = React.memo<GameUIProps>(({ status, health, maxHealth, scor
         const totalMonthsSurvived = difficultyLevel - 1;
         const year = Math.floor(totalMonthsSurvived / 12);
         const month = totalMonthsSurvived % 12;
-        const finalStats: StatProps = { score, year, month, rocksDestroyed, maxHealth, finalSpeed: playerSpeed, acquiredSkills, characterId };
+        const finalStats: StatProps = {
+            score, year, month, rocksDestroyed, maxHealth,
+            finalSpeed: playerSpeed, acquiredSkills, characterId,
+            completedAchievements: achievements?.filter(q => q.level > 1)
+        };
         return <GameOverModal score={score} onSave={onSaveScore} finalStats={finalStats} leaderboardState={leaderboardState as 'submitting' | 'idle' | 'error'} />;
     }
 

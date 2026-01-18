@@ -748,9 +748,9 @@ export const playGameOverSound = () => {
 };
 
 /**
- * Plays a triumphant fanfare for completing a quest.
+ * Plays a triumphant fanfare for completing an achievement.
  */
-export const playQuestCompleteSound = () => {
+export const playAchievementCompleteSound = () => {
     if (!audioContext || isMuted) return;
     if (audioContext.state === 'suspended') {
         audioContext.resume();

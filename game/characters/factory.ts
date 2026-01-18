@@ -45,7 +45,7 @@ export const createDrawFunction = (
     ) => {
         const assets = assetManager.getCharacterAssets(characterId);
         // Ensure assets and their dimensions are loaded before drawing
-        if (!assets || !assets.shellLeft.naturalWidth) return; 
+        if (!assets || !assets.shellLeft.naturalWidth) return;
 
         const { seed, shellLeft, shellRight } = assets;
         const { shelled, naked } = hitbox;
@@ -55,7 +55,7 @@ export const createDrawFunction = (
         const imageAspectRatio = shellLeft.naturalWidth / shellLeft.naturalHeight;
         const drawHeight = shelled.height;
         const drawWidth = drawHeight * imageAspectRatio;
-        
+
         // Calculate offset to center the aspect-correct image within the logical hitbox
         const xOffset = (shelled.width - drawWidth) / 2;
         const drawX = x + xOffset;
@@ -72,8 +72,8 @@ export const createDrawFunction = (
         }
 
         if (shellBreakAnimation) {
-            _drawShellPiece(ctx, shellBreakAnimation.leftPiece, shellLeft);
-            _drawShellPiece(ctx, shellBreakAnimation.rightPiece, shellRight);
+            if (shellBreakAnimation.leftPiece) _drawShellPiece(ctx, shellBreakAnimation.leftPiece, shellLeft);
+            if (shellBreakAnimation.rightPiece) _drawShellPiece(ctx, shellBreakAnimation.rightPiece, shellRight);
         }
 
         // --- 1. Draw Body (Seed) ---
@@ -89,22 +89,22 @@ export const createDrawFunction = (
             // This doesn't apply during shell reformation, where we want it centered for the animation.
             nakedYDrawOffset = shelled.height - nakedDrawHeight;
         }
-        
+
         ctx.drawImage(seed, x + nakedXDrawOffset, y + nakedYDrawOffset, nakedDrawWidth, nakedDrawHeight);
 
         // --- 2. Draw Shells ---
-        if ((!player.isNaked || shellReformAnimation) && !shellBreakAnimation) {
+        if (!player.isNaked || shellReformAnimation) {
             const healthPercentage = maxHealth > 0 ? Math.min(1, Math.max(0, player.health) / maxHealth) : 0;
-            
+
             let reformOffsetX = 0;
             if (shellReformAnimation) {
                 const t = 1 - shellReformAnimation.progress;
                 const easedProgress = 1 - t * t * t; // easeOutCubic
                 // Base the slide offset on the visual width, not the hitbox width
-                const maxOffset = drawWidth * 0.25; 
+                const maxOffset = drawWidth * 0.25;
                 reformOffsetX = maxOffset * (1 - easedProgress);
             }
-            
+
             const maxAngle = 20;
             const rotationAngle = (1 - healthPercentage) * maxAngle;
             const angleInRadians = rotationAngle * Math.PI / 180;
@@ -112,21 +112,30 @@ export const createDrawFunction = (
             const pivotX = x + shelled.width / 2;
             const pivotY = y + shelled.height;
 
+            const isLeftAnimating = !!(shellBreakAnimation && shellBreakAnimation.leftPiece);
+            const isRightAnimating = !!(shellBreakAnimation && shellBreakAnimation.rightPiece);
+
             // --- Draw Left Shell ---
-            ctx.save();
-            ctx.translate(pivotX, pivotY);
-            ctx.rotate(-angleInRadians); // Corrected: Rotate counter-clockwise to open
-            ctx.translate(-pivotX, -pivotY);
-            ctx.drawImage(shellLeft, drawX - reformOffsetX, drawY, drawWidth, drawHeight);
-            ctx.restore();
+            // Draw if player has a left shell
+            if (!player.isHalfShell) {
+                ctx.save();
+                ctx.translate(pivotX, pivotY);
+                ctx.rotate(-angleInRadians); // Rotate counter-clockwise to open
+                ctx.translate(-pivotX, -pivotY);
+                ctx.drawImage(shellLeft, drawX - reformOffsetX, drawY, drawWidth, drawHeight);
+                ctx.restore();
+            }
 
             // --- Draw Right Shell ---
-            ctx.save();
-            ctx.translate(pivotX, pivotY);
-            ctx.rotate(angleInRadians); // Corrected: Rotate clockwise to open
-            ctx.translate(-pivotX, -pivotY);
-            ctx.drawImage(shellRight, drawX + reformOffsetX, drawY, drawWidth, drawHeight);
-            ctx.restore();
+            // Always draw right shell if we are in this block (since we are not naked)
+            if (true) {
+                ctx.save();
+                ctx.translate(pivotX, pivotY);
+                ctx.rotate(angleInRadians); // Rotate clockwise to open
+                ctx.translate(-pivotX, -pivotY);
+                ctx.drawImage(shellRight, drawX + reformOffsetX, drawY, drawWidth, drawHeight);
+                ctx.restore();
+            }
         }
     };
 };

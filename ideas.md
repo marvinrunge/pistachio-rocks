@@ -1,0 +1,17 @@
+
+- photosynthesis is too strong
+    - should be scaling with max hp (min +1hp or 1% of hp)
+    - legendary skill that is only skillable once
+- quest by season (not during events)
+    - autumn: collect fallen sticks 100
+        - sticks fall in addtion to the rocks (do no damage)
+        - reward: spawns a permanent hut that blocks rocks (100HP) then breaks (is rebuild every 100 collected sticks)
+    - winter: get frozen 10 times
+        - first snowflake slows for 3s within that time the second snowflake freezes for 3s
+        - reward: during the freeze the player is invincible
+    - spring: collect 100 seeds
+        - seeds fall in addtion to the rocks (do no damage)
+        - reward: spawns 
+    - summer: bath in sunlight for 100s
+        - every summer season spawns a sunbeam
+        - reward: from now on sunbeams harden the shell and add 20% block chance while saying in the sunbeam

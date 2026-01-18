@@ -27,6 +27,7 @@ interface UseSkillSystemProps {
     resetGameInput: () => void;
     lastFrameTimeRef: React.MutableRefObject<number>;
     healPlayer?: (amount: number) => void;
+    blockChance: number;
 }
 
 export const useSkillSystem = ({
@@ -51,7 +52,8 @@ export const useSkillSystem = ({
     clearEventEffects,
     resetGameInput,
     lastFrameTimeRef,
-    healPlayer
+    healPlayer,
+    blockChance
 }: UseSkillSystemProps) => {
 
     const applySkillEffect = useCallback((skillId: string) => {
@@ -104,7 +106,12 @@ export const useSkillSystem = ({
                 setAvailableSkills(shuffled.slice(0, 3));
             } else {
                 // At the end of other event months (3, 6, 9, 15...), offer a special event skill
-                const shuffled = [...EVENT_SKILL_POOL].sort(() => 0.5 - Math.random());
+                // Filter out maxed skills
+                let pool = [...EVENT_SKILL_POOL];
+                if (blockChance >= 0.9) {
+                    pool = pool.filter(s => s.id !== 'blockChance');
+                }
+                const shuffled = pool.sort(() => 0.5 - Math.random());
                 setAvailableSkills(shuffled.slice(0, 3));
             }
         } else {
@@ -112,7 +119,7 @@ export const useSkillSystem = ({
             const shuffled = [...PERMANENT_SKILL_POOL].sort(() => 0.5 - Math.random());
             setAvailableSkills(shuffled.slice(0, 3));
         }
-    }, [difficultyLevel, monthCounter, clearEventEffects, resetGameInput, setIncomingEventTitle, setDifficultyLevel, setGameStatus, setAvailableSkills]);
+    }, [difficultyLevel, monthCounter, clearEventEffects, resetGameInput, setIncomingEventTitle, setDifficultyLevel, setGameStatus, setAvailableSkills, blockChance]);
 
     const handleSkillSelect = useCallback((skillId: string) => {
         const selectedSkill = availableSkills.find(s => s.id === skillId);

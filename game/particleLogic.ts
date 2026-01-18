@@ -107,6 +107,29 @@ export function createSeasonalParticles(season: Season, gameWidth: number, delta
   return particlesToCreate;
 }
 
+export function createPhoenixParticles(x: number, y: number): ParticleState[] {
+  const particlesToCreate: ParticleState[] = [];
+  const numParticles = 30;
+  for (let i = 0; i < numParticles; i++) {
+    const angle = -Math.PI / 2 + (Math.random() - 0.5) * 2; // Upward cone
+    const speed = 100 + Math.random() * 200;
+    const color = ['#ef4444', '#f97316', '#eab308'][Math.floor(Math.random() * 3)]; // Red, Orange, Yellow
+    particlesToCreate.push({
+      id: Math.random(),
+      x: x,
+      y: y,
+      xVelocity: Math.cos(angle) * speed,
+      yVelocity: Math.sin(angle) * speed,
+      size: 3 + Math.random() * 5,
+      color: color,
+      lifespan: 0.5 + Math.random() * 0.8,
+      type: 'fire',
+      rotation: Math.random() * 360,
+      rotationSpeed: (Math.random() - 0.5) * 100,
+    });
+  }
+  return particlesToCreate;
+}
 
 // --- Particle Update Function ---
 
@@ -121,8 +144,11 @@ export function updateParticles(
       x: p.x + p.xVelocity * deltaTime,
       y: p.y + p.yVelocity * deltaTime,
       // Apply gravity only to rock and dust particles
-      yVelocity: p.yVelocity + (p.type === 'rock' || p.type === 'dust' ? GRAVITY * 0.8 * deltaTime : 0),
+      yVelocity: p.yVelocity + (p.type === 'rock' || p.type === 'dust' ? GRAVITY * 0.8 * deltaTime : p.type === 'fire' ? -GRAVITY * 0.2 * deltaTime : 0),
       lifespan: p.lifespan - deltaTime,
+      size: p.type === 'fire' ? Math.max(0, p.size - deltaTime * (p.size / p.lifespan) * 0.5) : p.size, // Fire particles shrink
+      color: p.type === 'fire' ? `rgba(255, ${100 + Math.random() * 100}, 0, ${Math.max(0, p.lifespan / (0.3 + Math.random() * 0.5))})` : p.color, // Fire fades
+      rotation: p.rotation !== undefined ? p.rotation + (p.rotationSpeed || 0) * deltaTime : p.rotation,
     }))
     .filter((p) => p.lifespan > 0);
 }

@@ -121,62 +121,76 @@ export function drawRainingElement(ctx: CanvasRenderingContext2D, el: ElementSta
     ctx.restore();
 }
 
-export function drawGround(ctx: CanvasRenderingContext2D, season: Season, currentEvent: string | null, gameWidth: number, burningPatches: BurningPatchState[], timeInMonth?: number) {
-    const groundY = GAME_HEIGHT - GROUND_HEIGHT;
-    let grassColors = { from: '#22c55e', to: '#166534' };
-    if (season === 'summer' || currentEvent === 'meteorShower') grassColors = { from: '#2a7425ff', to: '#44a12dff' };
-    if (season === 'autumn') grassColors = { from: '#f97316', to: '#b45309' };
+// Caching system for ground rendering to improve performance
+const groundCache = {
+    base: {
+        canvas: null as HTMLCanvasElement | null,
+        key: '',
+    },
+    foreground: {
+        canvas: null as HTMLCanvasElement | null,
+        key: '',
+    }
+};
 
-    if (currentEvent === 'thunderstorm') {
-        grassColors.from = darken(grassColors.from, 40);
-        grassColors.to = darken(grassColors.to, 40);
+function getCacheKey(season: Season, currentEvent: string | null, gameWidth: number, scale: number, extra?: any) {
+    const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+    return `${season}-${currentEvent}-${gameWidth}-${scale}-${dpr}-${extra || ''}`;
+}
+
+export function drawGroundBase(ctx: CanvasRenderingContext2D, season: Season, currentEvent: string | null, gameWidth: number, burningPatches: BurningPatchState[], timeInMonth?: number, scale: number = 1) {
+    const cacheKey = getCacheKey(season, currentEvent, gameWidth, scale);
+
+    if (!groundCache.base.canvas || groundCache.base.key !== cacheKey) {
+        const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+        if (!groundCache.base.canvas) groundCache.base.canvas = document.createElement('canvas');
+
+        // High-DPI scaling
+        groundCache.base.canvas.width = gameWidth * scale * dpr;
+        groundCache.base.canvas.height = GROUND_HEIGHT * scale * dpr;
+
+        const bCtx = groundCache.base.canvas.getContext('2d');
+        if (bCtx) {
+            bCtx.scale(scale * dpr, scale * dpr);
+            const groundY = 0;
+            let grassColors = { from: '#22c55e', to: '#166534' };
+            if (season === 'summer' || currentEvent === 'meteorShower') grassColors = { from: '#2a7425ff', to: '#44a12dff' };
+            if (season === 'autumn') grassColors = { from: '#f97316', to: '#b45309' };
+            if (currentEvent === 'thunderstorm') {
+                grassColors.from = darken(grassColors.from, 40);
+                grassColors.to = darken(grassColors.to, 40);
+            }
+
+            const gradient = bCtx.createLinearGradient(0, 0, 0, GROUND_HEIGHT);
+            gradient.addColorStop(0, grassColors.from);
+            gradient.addColorStop(1, grassColors.to);
+            bCtx.fillStyle = gradient;
+            bCtx.fillRect(0, 0, gameWidth, GROUND_HEIGHT);
+
+            if (season === 'winter') {
+                bCtx.fillStyle = 'white';
+                bCtx.fillRect(0, 0, gameWidth, GROUND_HEIGHT);
+                const snowGradient = bCtx.createLinearGradient(0, 0, 0, 15);
+                snowGradient.addColorStop(0, 'rgba(150, 150, 200, 0.2)');
+                snowGradient.addColorStop(1, 'transparent');
+                bCtx.fillStyle = snowGradient;
+                bCtx.fillRect(0, 0, gameWidth, 15);
+
+                bCtx.fillStyle = 'rgba(173, 216, 230, 0.2)';
+                bCtx.beginPath();
+                bCtx.ellipse(gameWidth * 0.25, GROUND_HEIGHT * 0.8, 50, 10, 0, 0, 2 * Math.PI);
+                bCtx.fill();
+                bCtx.beginPath();
+                bCtx.ellipse(gameWidth * 0.75, GROUND_HEIGHT * 0.85, 75, 12, 0, 0, 2 * Math.PI);
+                bCtx.fill();
+            }
+        }
+        groundCache.base.key = cacheKey;
     }
 
-    const gradient = ctx.createLinearGradient(0, groundY, 0, GAME_HEIGHT);
-    gradient.addColorStop(0, grassColors.from);
-    gradient.addColorStop(1, grassColors.to);
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, groundY, gameWidth, GROUND_HEIGHT);
-
-    if (season === 'spring') {
-        groundDetails.spring.forEach(flower => {
-            ctx.fillStyle = flower.color;
-            ctx.beginPath();
-            ctx.arc(flower.x * gameWidth, groundY + flower.y * GROUND_HEIGHT, flower.size / 2, 0, 2 * Math.PI);
-            ctx.fill();
-            ctx.fillStyle = '#fef08a';
-            ctx.beginPath();
-            ctx.arc(flower.x * gameWidth, groundY + flower.y * GROUND_HEIGHT, flower.size / 6, 0, 2 * Math.PI);
-            ctx.fill();
-        });
-    } else if (season === 'autumn') {
-        groundDetails.autumn.forEach(leaf => {
-            ctx.save();
-            ctx.translate(leaf.x * gameWidth, groundY + leaf.y * GROUND_HEIGHT);
-            ctx.rotate(leaf.rotation * Math.PI / 180);
-            ctx.fillStyle = leaf.color;
-            ctx.globalAlpha = 0.8;
-            ctx.beginPath();
-            ctx.ellipse(0, 0, leaf.size / 2, leaf.size * 0.35, 0, 0, 2 * Math.PI);
-            ctx.fill();
-            ctx.restore();
-        });
-    } else if (season === 'winter') {
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, groundY, gameWidth, GROUND_HEIGHT);
-        const snowGradient = ctx.createLinearGradient(0, groundY, 0, groundY + 15);
-        snowGradient.addColorStop(0, 'rgba(150, 150, 200, 0.2)');
-        snowGradient.addColorStop(1, 'transparent');
-        ctx.fillStyle = snowGradient;
-        ctx.fillRect(0, groundY, gameWidth, 15);
-
-        ctx.fillStyle = 'rgba(173, 216, 230, 0.2)';
-        ctx.beginPath();
-        ctx.ellipse(gameWidth * 0.25, groundY + GROUND_HEIGHT * 0.8, 50, 10, 0, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(gameWidth * 0.75, groundY + GROUND_HEIGHT * 0.85, 75, 12, 0, 0, 2 * Math.PI);
-        ctx.fill();
+    const groundY = GAME_HEIGHT - GROUND_HEIGHT;
+    if (groundCache.base.canvas) {
+        ctx.drawImage(groundCache.base.canvas, 0, groundY, gameWidth, GROUND_HEIGHT);
     }
 
     burningPatches.forEach(patch => {
@@ -189,7 +203,7 @@ export function drawGround(ctx: CanvasRenderingContext2D, season: Season, curren
         ctx.ellipse(patch.x + patch.width / 2, groundY + 5, patch.width / 2, 8, 0, 0, 2 * Math.PI);
         ctx.fill();
 
-        // Embers
+        // Dynamic Embers
         if (Math.random() > 0.5) {
             const emberX = patch.x + Math.random() * patch.width;
             const emberY = groundY + Math.random() * 10 - 5;
@@ -203,31 +217,22 @@ export function drawGround(ctx: CanvasRenderingContext2D, season: Season, curren
 
     if (currentEvent === 'blizzard' && timeInMonth !== undefined) {
         const progress = timeInMonth / 30;
-        const maxSnowHeight = 40; // Max height of accumulation
+        const maxSnowHeight = 40;
         const snowHeight = progress * maxSnowHeight;
-
         if (snowHeight > 1) {
             ctx.fillStyle = 'white';
             ctx.beginPath();
             const startY = groundY;
-
             const segments = 50;
             let firstY = 0;
-            // Draw the top wavy line of the snow
             for (let i = 0; i <= segments; i++) {
                 const x = (i / segments) * gameWidth;
-                const wave1 = Math.sin(i / 7 + 1) * 5; // Use offsets to avoid starting at 0
+                const wave1 = Math.sin(i / 7 + 1) * 5;
                 const wave2 = Math.sin(i / 2.5) * 3;
                 const y = startY - snowHeight + wave1 + wave2;
-                if (i === 0) {
-                    firstY = y;
-                    ctx.moveTo(0, y);
-                } else {
-                    ctx.lineTo(x, y);
-                }
+                if (i === 0) { firstY = y; ctx.moveTo(0, y); }
+                else { ctx.lineTo(x, y); }
             }
-
-            // Draw lines to close the shape with the ground
             ctx.lineTo(gameWidth, startY);
             ctx.lineTo(0, startY);
             ctx.lineTo(0, firstY);
@@ -239,12 +244,138 @@ export function drawGround(ctx: CanvasRenderingContext2D, season: Season, curren
     let overlayColor = 'transparent';
     switch (currentEvent) {
         case 'storm': overlayColor = 'rgba(71, 85, 105, 0.4)'; break;
-        // The main blizzard overlay is now handled by the fog gradient
-        // case 'blizzard': overlayColor = 'rgba(255, 255, 255, 0.2)'; break;
     }
     if (overlayColor !== 'transparent') {
         ctx.fillStyle = overlayColor;
         ctx.fillRect(0, groundY, gameWidth, GROUND_HEIGHT);
+    }
+}
+
+export function drawGroundForeground(ctx: CanvasRenderingContext2D, season: Season, currentEvent: string | null, gameWidth: number, currentFrameTime?: number, scale: number = 1) {
+    const cacheKey = getCacheKey(season, currentEvent, gameWidth, scale);
+
+    if (!groundCache.foreground.canvas || groundCache.foreground.key !== cacheKey) {
+        const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+        if (!groundCache.foreground.canvas) groundCache.foreground.canvas = document.createElement('canvas');
+
+        // High-DPI scaling
+        groundCache.foreground.canvas.width = gameWidth * scale * dpr;
+        groundCache.foreground.canvas.height = (GROUND_HEIGHT + 40) * scale * dpr;
+
+        const fCtx = groundCache.foreground.canvas.getContext('2d');
+        if (fCtx) {
+            fCtx.scale(scale * dpr, scale * dpr);
+            const groundY = 40; // Ground line in the cache canvas
+
+            type GroundItem = {
+                y: number;
+                draw: (ctx: CanvasRenderingContext2D) => void;
+            };
+
+            const items: GroundItem[] = [];
+
+            // 1. Generate Grass Blades (if not winter)
+            if (season !== 'winter') {
+                const grassCount = Math.floor(gameWidth * 6.0);
+                for (let i = 0; i < grassCount; i++) {
+                    const seed = (i + 1) * 1234.567;
+                    const random = (s: number) => { const x = Math.sin(s) * 10000; return x - Math.floor(x); };
+                    const x = random(seed) * gameWidth;
+                    const y = groundY + random(seed + 1) * GROUND_HEIGHT;
+                    const height = random(seed + 2) * 15 + 10;
+                    const width = random(seed + 3) * 1.0 + 0.5;
+                    const tilt = (random(seed + 4) - 0.5) * 10;
+
+                    let baseHue = 142;
+                    if (season === 'summer' || currentEvent === 'meteorShower') baseHue = 110;
+                    if (season === 'autumn') baseHue = 30;
+
+                    const hue = baseHue + (random(seed + 5) * 30 - 15);
+                    const saturation = 40 + random(seed + 6) * 40;
+                    const lightness = 25 + random(seed + 7) * 30;
+                    const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+
+                    items.push({
+                        y,
+                        draw: (c) => {
+                            c.fillStyle = color;
+                            c.beginPath();
+                            c.moveTo(x - width / 2, y);
+                            c.quadraticCurveTo(x, y - height, x + tilt, y - height);
+                            c.quadraticCurveTo(x + width / 2, y - height / 2, x + width / 2, y);
+                            c.fill();
+                        }
+                    });
+                }
+            }
+
+            // 2. Generate Flowers (Spring)
+            if (season === 'spring') {
+                const flowerCount = Math.floor(gameWidth / 6);
+                const flowerColors = ['#f87171', '#fbbf24', '#a78bfa', '#f472b6', '#60a5fa', '#ffffff'];
+                for (let i = 0; i < flowerCount; i++) {
+                    const seed = (i + 1) * 987.654;
+                    const random = (s: number) => { const x = Math.sin(s) * 10000; return x - Math.floor(x); };
+                    const x = random(seed) * gameWidth;
+                    const baseY = groundY + random(seed + 1) * GROUND_HEIGHT;
+                    const stalkHeight = random(seed + 4) * 15 + 10;
+                    const tilt = (random(seed + 5) - 0.5) * 8;
+                    const headY = baseY - stalkHeight;
+                    const size = random(seed + 2) * 8 + 6;
+                    const color = flowerColors[Math.floor(random(seed + 3) * flowerColors.length)];
+
+                    items.push({
+                        y: baseY,
+                        draw: (c) => {
+                            c.strokeStyle = '#064e3b';
+                            c.lineWidth = 1.5;
+                            c.beginPath();
+                            c.moveTo(x, baseY);
+                            c.quadraticCurveTo(x, headY + stalkHeight / 2, x + tilt, headY);
+                            c.stroke();
+                            c.fillStyle = color;
+                            c.beginPath();
+                            c.arc(x + tilt, headY, size / 2, 0, 2 * Math.PI);
+                            c.fill();
+                            c.fillStyle = '#052e16';
+                            c.beginPath();
+                            c.arc(x + tilt, headY, size / 5, 0, 2 * Math.PI);
+                            c.fill();
+                        }
+                    });
+                }
+            }
+
+            // 3. Generate Leaves (Autumn)
+            if (season === 'autumn') {
+                groundDetails.autumn.forEach(leaf => {
+                    const y = groundY + leaf.y * GROUND_HEIGHT;
+                    items.push({
+                        y,
+                        draw: (c) => {
+                            c.save();
+                            c.translate(leaf.x * gameWidth, y);
+                            c.rotate(leaf.rotation * Math.PI / 180);
+                            c.fillStyle = leaf.color;
+                            c.globalAlpha = 0.8;
+                            c.beginPath();
+                            c.ellipse(0, 0, leaf.size / 2, leaf.size * 0.35, 0, 0, 2 * Math.PI);
+                            c.fill();
+                            c.restore();
+                        }
+                    });
+                });
+            }
+
+            // 4. Sort and Draw
+            items.sort((a, b) => a.y - b.y);
+            items.forEach(item => item.draw(fCtx));
+        }
+        groundCache.foreground.key = cacheKey;
+    }
+
+    if (groundCache.foreground.canvas) {
+        ctx.drawImage(groundCache.foreground.canvas, 0, GAME_HEIGHT - GROUND_HEIGHT - 40, gameWidth, GROUND_HEIGHT + 40);
     }
 }
 
@@ -313,55 +444,39 @@ export function drawGame(
         ctx.fillRect(0, 0, gameDimensions.width, GAME_HEIGHT);
     }
 
-    drawGround(ctx, season, currentEvent, gameDimensions.width, burningPatches, timeInMonth);
+    drawGroundBase(ctx, season, currentEvent, gameDimensions.width, burningPatches, timeInMonth, renderContext.scale);
 
     // Draw Healing Fountains
     if (gameState.healingFountains) {
         gameState.healingFountains.forEach(f => {
             ctx.save();
             ctx.translate(f.x, f.y);
-
-            // Fountain base
             ctx.fillStyle = '#8899aa';
             ctx.fillRect(0, -10, f.width, 10);
-
-            // Water effect
             const time = Date.now() / 1000;
             const waterHeight = Math.sin(time * 5) * 10 + 40;
-
             const gradient = ctx.createLinearGradient(0, -10, 0, -waterHeight);
             gradient.addColorStop(0, '#3b82f6');
             gradient.addColorStop(1, '#93c5fd');
             ctx.fillStyle = gradient;
-
             ctx.beginPath();
             ctx.moveTo(10, -10);
             ctx.quadraticCurveTo(f.width / 2, -waterHeight - 20, f.width - 10, -10);
             ctx.fill();
-
-
-            // Particles/Sparkles
             if (Math.random() < 0.3) {
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
                 ctx.arc(f.width / 2 + (Math.random() - 0.5) * 30, -Math.random() * waterHeight, 2, 0, Math.PI * 2);
                 ctx.fill();
             }
-
-            // Capacity Bar
             const barWidth = 40;
             const barHeight = 6;
             const barY = -waterHeight - 35;
             const percent = Math.max(0, Math.min(1, f.currentCapacity / f.maxCapacity));
-
-            // Bar background
             ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
             ctx.fillRect(f.width / 2 - barWidth / 2 - 2, barY - 2, barWidth + 4, barHeight + 4);
-
-            // Bar fill
             ctx.fillStyle = percent > 0.5 ? '#22c55e' : percent > 0.2 ? '#eab308' : '#ef4444';
             ctx.fillRect(f.width / 2 - barWidth / 2, barY, barWidth * percent, barHeight);
-
             ctx.restore();
         });
     }
@@ -386,6 +501,13 @@ export function drawGame(
             ctx.globalAlpha = Math.max(0, p.lifespan);
             ctx.fillRect(p.x, p.y, p.size * 5, p.size / 3);
             ctx.globalAlpha = 1;
+        } else if (p.type === 'fire') {
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = Math.max(0, p.lifespan);
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.globalAlpha = 1;
         } else {
             ctx.fillStyle = p.color;
             ctx.globalAlpha = Math.max(0, p.lifespan);
@@ -403,34 +525,31 @@ export function drawGame(
         if (gameState.player.seismicSlamReady) {
             ctx.save();
             ctx.translate(gameState.player.x + PLAYER_WIDTH / 2, GAME_HEIGHT - gameState.player.y - PLAYER_HEIGHT / 2);
-
             const time = Date.now() / 100;
             const radius = 60;
-
-            ctx.strokeStyle = '#fef08a'; // Yellow
+            ctx.strokeStyle = '#fef08a';
             ctx.lineWidth = 2;
             ctx.shadowColor = '#fbbf24';
             ctx.shadowBlur = 10;
-
             for (let i = 0; i < 3; i++) {
                 ctx.beginPath();
                 const offset = (i * Math.PI * 2 / 3) + time;
                 let angle = offset;
                 let r = radius + Math.sin(time * 5 + i) * 5;
                 ctx.moveTo(Math.cos(angle) * r, Math.sin(angle) * r);
-
                 for (let j = 0; j < 10; j++) {
                     angle += 0.2;
-                    // Jagged line
                     r = radius + (Math.random() - 0.5) * 20;
                     ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
                 }
                 ctx.stroke();
             }
-
             ctx.restore();
         }
     }
+
+    // Draw foreground decorations (grass, flowers, etc.) last to ensure they are in front of the player
+    drawGroundForeground(ctx, season, currentEvent, gameDimensions.width, currentFrameTime, renderContext.scale);
 
     // Draw floating scores and texts
     ctx.font = 'bold 20px "Press Start 2P", monospace';

@@ -9,6 +9,9 @@ export const getInitialPlayerState = (characterId: CharacterId): PlayerState => 
     health: 0,
     isNaked: true,
     characterId,
+    shellRecoveries: 0,
+    isHalfShell: false,
+    hasReinforcedShell: false,
 });
 
 export const generateInitialClouds = (width: number): CloudState[] => {
@@ -24,13 +27,6 @@ export const generateInitialClouds = (width: number): CloudState[] => {
 
 // Pre-generate random ground details to prevent them from changing on every render.
 export const groundDetails = {
-    spring: Array.from({ length: 30 }).map((_, i) => ({
-        id: i,
-        x: Math.random(), // Use normalized coordinates
-        y: Math.random(),
-        color: ['#f87171', '#fbbf24', '#a78bfa', '#f472b6', '#60a5fa', '#ffffff'][i % 6],
-        size: Math.random() * 8 + 6,
-    })),
     autumn: Array.from({ length: 20 }).map((_, i) => ({
         id: i,
         x: Math.random(),

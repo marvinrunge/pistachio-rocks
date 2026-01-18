@@ -12,6 +12,9 @@ export type PlayerState = {
   isNaked: boolean;
   characterId: CharacterId;
   seismicSlamReady?: boolean;
+  shellRecoveries: number;
+  isHalfShell?: boolean;
+  hasReinforcedShell?: boolean;
 };
 
 export type ElementType = 'rock' | 'water' | 'snow' | 'meteor';
@@ -37,8 +40,8 @@ export type ShellPieceState = {
 };
 
 export type ShellBreakAnimationState = {
-  leftPiece: ShellPieceState;
-  rightPiece: ShellPieceState;
+  leftPiece?: ShellPieceState;
+  rightPiece?: ShellPieceState;
   lifespan: number;
 };
 
@@ -66,6 +69,7 @@ export type HighScoreEntry = {
   acquiredSkills: Skill[];
   characterId: CharacterId;
   version: string;
+  completedAchievements?: AchievementState[];
 };
 
 export type SubmissionResult = {
@@ -86,6 +90,7 @@ export type ScorePayload = {
   acquiredSkills: Skill[];
   characterId: CharacterId;
   version: string;
+  completedAchievements?: AchievementState[];
 };
 
 export type GameStatus = 'start' | 'playing' | 'levelUp' | 'enteringName' | 'highScores' | 'instructions' | 'characterSelect' | 'about';
@@ -94,28 +99,15 @@ export type ParticleState = {
   id: number;
   x: number;
   y: number;
-  xVelocity: number;
-  yVelocity: number;
-  size: number;
-  color: string;
-  lifespan: number;
-  type: 'rock' | 'water' | 'dust' | 'leaf';
-  rotation?: number;
-};
-
-export type GameDimensions = {
-  width: number;
-  height: number;
-};
 
 export type LightningStrike = {
-  id: number;
-  x: number;
-  width: number;
-  warningStartTime: number;
-  strikeTime: number;
-  hasStruck?: boolean;
-};
+    id: number;
+    x: number;
+    width: number;
+    warningStartTime: number;
+    strikeTime: number;
+    hasStruck?: boolean;
+  };
 
 export type BurningPatchState = {
   id: number;
@@ -151,10 +143,10 @@ export type FloatingScoreState = {
   isGolden: boolean;
 };
 
-export type QuestType = 'rainDancer' | 'geologist' | 'rockBreaker';
+export type AchievementType = 'rainDancer' | 'geologist' | 'rockBreaker' | 'shellEvader';
 
-export type QuestState = {
-  id: QuestType;
+export type AchievementState = {
+  id: AchievementType;
   title: string;
   progress: number;
   target: number;
@@ -162,9 +154,9 @@ export type QuestState = {
   isCompleted: boolean;
 };
 
-export type QuestNotification = {
+export type AchievementNotification = {
   id: number;
-  questTitle: string;
+  achievementTitle: string;
   level: number;
   lifespan: number;
 };

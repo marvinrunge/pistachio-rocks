@@ -1,7 +1,7 @@
 
 
 import React, { useEffect, useRef, useCallback, useState } from 'react';
-import type { PlayerState, ElementState, ParticleState, Skill, LightningStrike, Season, FloatingTextState, HighScoreEntry, ElementType, GameStatus, CloudState, FloatingScoreState, ShellBreakAnimationState, ShellPieceState, ScorePayload, SubmissionResult, CharacterId, ShellReformAnimationState, BurningPatchState, QuestNotification, HealingFountainState } from '../types';
+import type { PlayerState, ElementState, ParticleState, Skill, LightningStrike, Season, FloatingTextState, HighScoreEntry, ElementType, GameStatus, CloudState, FloatingScoreState, ShellBreakAnimationState, ShellPieceState, ScorePayload, SubmissionResult, CharacterId, ShellReformAnimationState, BurningPatchState, AchievementNotification, HealingFountainState } from '../types';
 import {
     GAME_HEIGHT,
     PLAYER_WIDTH,
@@ -28,7 +28,7 @@ import {
     GAME_VERSION,
     GAME_WIDTH,
 } from '../constants';
-import { initAudio, playJumpSound, playDamageSound, playImpactSound, playWaterCollectSound, playThunderSound, playLightningStrikeSound, playEarthquakeSound, playBlizzardSound, playStormSound, playBlockSound, playResurrectSound, playShellCrackSound, playSeismicSlamSound, playPhotosynthesisHealSound, playGoldenTouchSound, playGameOverSound, playMeteorImpactSound } from '../utils/audio';
+import { initAudio, playJumpSound, playDamageSound, playImpactSound, playWaterCollectSound, playThunderSound, playLightningStrikeSound, playEarthquakeSound, playBlizzardSound, playStormSound, playBlockSound, playResurrectSound, playShellCrackSound, playSeismicSlamSound, playPhotosynthesisHealSound, playGoldenTouchSound, playGameOverSound, playMeteorImpactSound, playAchievementCompleteSound } from '../utils/audio';
 import { loadLocalHighScores, saveLocalHighScores, savePlayerName } from '../utils/storage';
 import { getHighScores, startNewGameSession, submitScore } from '../utils/leaderboard';
 import { PERMANENT_SKILL_POOL, EVENT_SKILL_POOL, YEARLY_SKILL_POOL } from '../game/skills';
@@ -43,7 +43,7 @@ import { usePlayerPhysics } from './usePlayerPhysics';
 import { useCollisionSystem } from './useCollisionSystem';
 import { useGameElements } from './useGameElements';
 import { useEventSystem } from './useEventSystem';
-import { useQuestSystem } from './useQuestSystem';
+import { useAchievementSystem } from './useAchievementSystem';
 import { useSkillSystem } from './useSkillSystem';
 import { updateEvents, getIncomingEventTitle } from '../game/eventLogic';
 
@@ -145,6 +145,7 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
     const standStillTimer = useRef(0);
     const seismicShakeTimerRef = useRef(0);
     const seismicSlamTriggeredRef = useRef(false);
+    const reinforcedShellTriggeredRef = useRef(false);
     const renderContext = useRef({ scale: 1, offsetX: 0, offsetY: 0 });
     const gameSessionIdRef = useRef<string | null>(null);
     const gameStateRef = useRef(gameState);
@@ -157,7 +158,7 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
         }));
     }, [setGameState]);
 
-    const [questNotifications, setQuestNotifications] = useState<QuestNotification[]>([]);
+    const [achievementNotifications, setAchievementNotifications] = useState<AchievementNotification[]>([]);
     const [healingFountains, setHealingFountains] = useState<HealingFountainState[]>([]);
     const healingAccumulatorRef = useRef(0);
 
@@ -193,12 +194,21 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
         seismicSlamTriggeredRef.current = true;
     }, [setGameState]);
 
+    const triggerReinforcedShell = useCallback(() => {
+        setGameState(prev => ({
+            ...prev,
+            player: { ...prev.player, hasReinforcedShell: true }
+        }));
+        reinforcedShellTriggeredRef.current = true;
+    }, [setGameState]);
 
 
-    const { checkQuestProgress } = useQuestSystem({
-        setNotifications: setQuestNotifications,
+
+    const { checkAchievementProgress, achievements, resetAchievements } = useAchievementSystem({
+        setNotifications: setAchievementNotifications,
         spawnHealingFountain,
-        armSeismicSlam
+        armSeismicSlam,
+        triggerReinforcedShell
     });
 
     const { handleLevelUp, handleSkillSelect, simulateSkillsForDebug } = useSkillSystem({
@@ -223,7 +233,8 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
         clearEventEffects,
         resetGameInput,
         lastFrameTimeRef: lastFrameTime,
-        healPlayer
+        healPlayer,
+        blockChance
     });
 
     // Load assets on initial mount
@@ -243,13 +254,24 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
         setSeason(seasons[seasonIndex]);
     }, [monthCounter]);
 
+    const resetGame = useCallback((characterId?: CharacterId) => {
+        const targetId = characterId || selectedCharacterId;
+        resetGameStateInternal(targetId);
+        resetSpawnTimers();
+        resetAchievements();
+        setHealingFountains([]);
+        setAchievementNotifications([]);
+        seismicSlamTriggeredRef.current = false;
+        reinforcedShellTriggeredRef.current = false;
+    }, [resetGameStateInternal, resetSpawnTimers, resetAchievements, selectedCharacterId]);
+
     const startGame = useCallback(() => {
         if (!audioInitialized.current) {
             initAudio();
             audioInitialized.current = true;
         }
 
-        resetGameStateInternal(selectedCharacterId);
+        resetGame(selectedCharacterId);
 
         standStillTimer.current = 0;
 
@@ -283,7 +305,9 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
         setShellBreakAnimation,
         setShellReformAnimation,
         handleGameOver,
-        onWaterCollect: () => checkQuestProgress('rainDancer'),
+        onWaterCollect: () => checkAchievementProgress('rainDancer'),
+        onShellRecovered: () => checkAchievementProgress('shellEvader'),
+        playerSlowTimer
     });
 
     const handleFetchVersionScores = useCallback(async (version: string) => {
@@ -310,6 +334,7 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
         // Save to local scores as a backup
         const newLocalScore: HighScoreEntry = {
             id: Date.now(), name, score: Math.floor(score), year, month, rocksDestroyed, maxHealth, finalSpeed: maxSpeed, acquiredSkills, characterId: gameState.player.characterId, version: GAME_VERSION,
+            completedAchievements: achievements.filter(q => q.level > 1)
         };
         const updatedLocalScores = [...loadLocalHighScores(), newLocalScore].sort((a, b) => b.score - a.score).slice(0, 20);
         saveLocalHighScores(updatedLocalScores);
@@ -328,6 +353,7 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
                 acquiredSkills,
                 characterId: gameState.player.characterId,
                 version: GAME_VERSION,
+                completedAchievements: achievements.filter(q => q.level > 1)
             };
             try {
                 const submissionResult = await submitScore(payload);
@@ -348,7 +374,7 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
             setLeaderboardState('idle');
             setGameStatus('highScores');
         }
-    }, [score, monthCounter, rocksDestroyed, maxHealth, maxSpeed, acquiredSkills, gameState.player.characterId, handleFetchVersionScores, setGameStatus, setHighScores, setLastSubmissionResult, setLeaderboardState]);
+    }, [score, monthCounter, rocksDestroyed, maxHealth, maxSpeed, acquiredSkills, gameState.player.characterId, handleFetchVersionScores, setGameStatus, setHighScores, setLastSubmissionResult, setLeaderboardState, achievements]);
 
     const handleShowHighScores = useCallback(async () => {
         setLastSubmissionResult(null);
@@ -448,6 +474,10 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
                 nextPlayerState.seismicSlamReady = true;
                 seismicSlamTriggeredRef.current = false;
             }
+            if (reinforcedShellTriggeredRef.current) {
+                nextPlayerState.hasReinforcedShell = true;
+                reinforcedShellTriggeredRef.current = false;
+            }
 
             let nextElements = [...gameState.elements];
             let scoreGained = 0;
@@ -475,8 +505,8 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
                         piece.y += piece.yVelocity * deltaTime;
                         piece.rotation += piece.rotationVelocity * deltaTime;
                     };
-                    updatePiece(nextAnimationState.leftPiece);
-                    updatePiece(nextAnimationState.rightPiece);
+                    if (nextAnimationState.leftPiece) updatePiece(nextAnimationState.leftPiece);
+                    if (nextAnimationState.rightPiece) updatePiece(nextAnimationState.rightPiece);
                     setShellBreakAnimation(nextAnimationState);
                 }
             }
@@ -496,14 +526,16 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
                 particlesToCreate.push(...newParticles);
             }
 
-            const isStandingStill = photosynthesisLevel > 0 && Math.abs(nextPlayerState.xVelocity) < 1 && nextPlayerState.y <= GROUND_HEIGHT && !nextPlayerState.isNaked && nextPlayerState.health < maxHealth;
+            const isStandingStill = photosynthesisLevel > 0 && Math.abs(nextPlayerState.xVelocity) < 1 && nextPlayerState.y <= GROUND_HEIGHT && nextPlayerState.health < maxHealth;
             if (isStandingStill) {
                 standStillTimer.current += deltaTime;
                 const healInterval = 1.0;
                 if (standStillTimer.current >= healInterval) {
                     const healAmount = 1 * photosynthesisLevel;
-                    const newHealth = Math.min(maxHealth, nextPlayerState.health + healAmount);
-                    if (newHealth > nextPlayerState.health) {
+                    const oldHealth = nextPlayerState.health;
+                    const newHealth = Math.min(maxHealth, oldHealth + healAmount);
+
+                    if (newHealth > oldHealth) {
                         playPhotosynthesisHealSound();
                         floatingTextsToCreate.push({
                             id: Date.now() + Math.random(),
@@ -513,6 +545,15 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
                             color: '#10b981',
                             lifespan: 0.8,
                         });
+
+                        // Shell Recovery Logic
+                        if ((nextPlayerState.isNaked || nextPlayerState.isHalfShell) && oldHealth === 0) {
+                            nextPlayerState.isNaked = false;
+                            nextPlayerState.isHalfShell = false;
+                            setShellReformAnimation({ progress: 0, duration: 0.5 });
+                            checkAchievementProgress('shellEvader');
+                        }
+
                         nextPlayerState.health = newHealth;
                     }
                     standStillTimer.current -= healInterval;
@@ -536,9 +577,7 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
             nextBurningPatches = eventResult.newBurningPatches;
 
 
-            if (particles.length + particlesToCreate.length < MAX_PARTICLES) {
-                particlesToCreate.push(...createSeasonalParticles(season, gameDimensions.width, deltaTime));
-            }
+            particlesToCreate.push(...createSeasonalParticles(season, gameDimensions.width, deltaTime));
 
             const widthRatio = gameDimensions.width / 800;
             let rockSpawnInterval = ELEMENT_SPAWN_INTERVAL * Math.pow(0.92, monthCounter - 1);
@@ -608,9 +647,7 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
                             scoreGained += 10;
                             rocksHitBySlam += 1;
 
-                            if (particles.length + particlesToCreate.length < MAX_PARTICLES) {
-                                particlesToCreate.push(...createRockParticles({ ...el, y: GAME_HEIGHT - el.y - el.size }));
-                            }
+                            particlesToCreate.push(...createRockParticles({ ...el, y: GAME_HEIGHT - el.y - el.size }));
 
                             floatingScoresToCreate.push({
                                 id: Date.now() + Math.random(), // Unique ID
@@ -655,7 +692,7 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
             }
 
             if (rocksHitByCollision > 0) {
-                checkQuestProgress('rockBreaker', rocksHitByCollision);
+                checkAchievementProgress('rockBreaker', rocksHitByCollision);
             }
 
             // 3. Filter elements and handle ground collisions
@@ -684,14 +721,10 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
                         } else {
                             playImpactSound(el.size);
                         }
-                        if (particles.length + particlesToCreate.length < MAX_PARTICLES) {
-                            particlesToCreate.push(...createRockParticles({ ...el, y: GAME_HEIGHT - GROUND_HEIGHT - el.size }));
-                        }
+                        particlesToCreate.push(...createRockParticles({ ...el, y: GAME_HEIGHT - GROUND_HEIGHT - el.size }));
                     } else if (el.type === 'water' || el.type === 'snow') {
                         const splashY = el.type === 'water' ? GAME_HEIGHT - GROUND_HEIGHT : GAME_HEIGHT - GROUND_HEIGHT - el.size;
-                        if (particles.length + particlesToCreate.length < MAX_PARTICLES) {
-                            particlesToCreate.push(...createWaterSplashParticles({ x: el.x, y: splashY, size: el.size }));
-                        }
+                        particlesToCreate.push(...createWaterSplashParticles({ x: el.x, y: splashY, size: el.size }));
                     }
                 }
             }
@@ -752,6 +785,15 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
 
                     if (newHealth > nextPlayerState.health) {
                         const actualHealedAmount = newHealth - nextPlayerState.health;
+
+                        // Shell Recovery Logic
+                        if ((nextPlayerState.isNaked || nextPlayerState.isHalfShell) && nextPlayerState.health === 0) {
+                            nextPlayerState.isNaked = false;
+                            nextPlayerState.isHalfShell = false;
+                            setShellReformAnimation({ progress: 0, duration: 0.5 });
+                            checkAchievementProgress('shellEvader');
+                        }
+
                         nextPlayerState.health = newHealth;
                         fountainsChanged = true;
 
@@ -927,12 +969,10 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
         handleTouchMove,
         handleTouchEnd,
         assetsReady,
-        resetGameState: (characterId?: CharacterId) => {
-            resetGameStateInternal(characterId);
-            resetSpawnTimers();
-        },
+        resetGameState: resetGame,
         resetSpawnTimers,
-        questNotifications,
+        achievementNotifications,
         healingFountains,
+        achievements,
     };
 };

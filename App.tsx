@@ -155,6 +155,7 @@ const App: React.FC = () => {
                         gameVersion={GAME_VERSION}
                         archivedVersions={ARCHIVED_GAME_VERSIONS}
                         assetsReady={gameLogic.assetsReady}
+                        achievements={gameLogic.achievements}
                     />
                 </div>
                 {gameLogic.incomingEventTitle && (
@@ -168,14 +169,14 @@ const App: React.FC = () => {
                     </div>
                 )}
 
-                {gameLogic.questNotifications && gameLogic.questNotifications.map(notification => (
+                {gameLogic.achievementNotifications && gameLogic.achievementNotifications.map(notification => (
                     <div
                         key={notification.id}
                         className="absolute top-24 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-300 to-yellow-500 text-black px-6 py-3 rounded-xl shadow-2xl z-50 pointer-events-none flex flex-col items-center border-4 border-white"
                         style={{ animation: 'bounce 0.5s infinite alternate' }}
                     >
-                        <div className="text-xs font-black uppercase tracking-widest mb-1">Quest Complete!</div>
-                        <div className="text-xl font-bold">{notification.questTitle} <span className="text-2xl ml-1">x{notification.level}</span></div>
+                        <div className="text-xs font-black uppercase tracking-widest mb-1">Achievement Complete!</div>
+                        <div className="text-xl font-bold">{notification.achievementTitle} <span className="text-2xl ml-1">x{notification.level}</span></div>
                     </div>
                 ))}
             </div>

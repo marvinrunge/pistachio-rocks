@@ -49,7 +49,7 @@ export const submit = onCall(async (request) => {
     const totalMonths = (year || 0) * 12 + (month || 0);
     const secondsSurvived = totalMonths * 30;
     const maxPossibleScore =
-            (rocksDestroyed || 0) * 50 + secondsSurvived * 15 + 5000;
+      (rocksDestroyed || 0) * 50 + secondsSurvived * 15 + 5000;
 
     if (score > maxPossibleScore * 1.1) {
       console.error(
@@ -69,6 +69,7 @@ export const submit = onCall(async (request) => {
       maxHealth: maxHealth || 0,
       finalSpeed: finalSpeed || 0,
       acquiredSkills: acquiredSkills || [],
+      completedAchievements: data.completedAchievements || [],
       characterId: characterId || "pistachio",
       version: version,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
