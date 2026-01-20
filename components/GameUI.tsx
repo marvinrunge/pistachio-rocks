@@ -145,10 +145,6 @@ const StartMenu: React.FC<{ onStart: () => void; onShowHighScores: () => void; o
                     <BigButton onClick={onStart} disabled={!assetsReady} className={GREEN_BUTTON_CLASSES}>
                         {assetsReady ? 'Start Game' : 'Loading...'}
                     </BigButton>
-                    <BigButton
-                        onClick={onShowDebug} disabled={!assetsReady} className={GREEN_BUTTON_CLASSES}>
-                        {assetsReady ? 'Debug Game' : 'Loading...'}
-                    </BigButton>
                     <BigButton onClick={onShowCharacterSelect} disabled={!assetsReady} className={GRAY_BUTTON_CLASSES}>
                         {assetsReady ? 'Change Character' : 'Loading...'}
                     </BigButton>
@@ -586,9 +582,9 @@ const GameOverModal: React.FC<{ score: number, onSave: (name: string) => Promise
 
         try {
             await navigator.share({
-                title: 'My Pistachio High Score!',
+                title: 'My Pistachio High Score! ' + Math.floor(finalStats.score),
                 text: shareText,
-                url: 'https://pistachio-899228832025.us-west1.run.app/',
+                url: 'https://pistachio.rocks',
             });
         } catch (error) {
             console.error('Error sharing score:', error);
