@@ -26,7 +26,7 @@ Codemagic will handle everything else, including uploading the final app file di
 ## 🕹️ Gameplay
 
 ### The Goal
-Survive for as long as you can! Smash rocks by jumping into them from below to score points, but be careful—each hit damages your fragile shell. Collect falling water drops to repair your shell and keep going.
+Survive for as long as you can! Smash rocks and score points, but be careful—each hit damages your fragile shell. Collect falling water drops to repair your shell and keep going.
 
 ### Progression
 Every 30 seconds, you advance to a new month. At the end of each month, you get to choose a powerful new skill to aid your survival. Every three months, the season changes, culminating in a dangerous weather event!
