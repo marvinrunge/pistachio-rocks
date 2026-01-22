@@ -13,6 +13,7 @@ export const PISTACHIO_CHARACTER: Character = {
     name: 'Pistachio',
     description: 'The original nut. Balanced and classic.',
     hitbox: PISTACHIO_HITBOX,
-    startingStats: {},
+    startingStats: {
+    },
     draw: createDrawFunction(PISTACHIO_HITBOX, 'pistachio'),
 };

@@ -8,7 +8,7 @@ export const PERMANENT_SKILL_POOL: Skill[] = [
 
 export const EVENT_SKILL_POOL: Skill[] = [
   { id: 'waterAffinity', title: 'Water Affinity', description: 'Permanently increases the healing from all water drops by 1. This effect stacks.', color: 'text-sky-400', icon: '💧' },
-  { id: 'blockChance', title: 'Stone Shell', description: 'Permanently increase your chance to block rock damage by 10%. This effect stacks.', color: 'text-purple-400', icon: '🪨' },
+  { id: 'blockChance', title: 'Stone Shell', description: 'Permanently increase your chance to block rock damage by 10%. This effect stacks. (90% cap)', color: 'text-purple-400', icon: '🪨' },
   { id: 'extraLife', title: 'Phoenix Kernel', description: 'Gain an extra life. If your shell breaks, you are instantly revived with full HP. This effect is permanent and stacks.', color: 'text-yellow-400', icon: '🔥' },
 ];
 

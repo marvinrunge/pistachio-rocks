@@ -6,7 +6,6 @@ import type {
     FloatingScoreState,
     FloatingTextState,
     ShellBreakAnimationState,
-    CharacterId,
     Season,
     ShellReformAnimationState
 } from '../types';

@@ -3,7 +3,6 @@ import type { PlayerState, GameDimensions, ParticleState } from '../types';
 import {
     GAME_HEIGHT,
     PLAYER_WIDTH,
-    PLAYER_HEIGHT,
     PLAYER_ACCELERATION,
     GROUND_FRICTION,
     ICE_FRICTION,

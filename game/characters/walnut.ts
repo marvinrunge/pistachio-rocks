@@ -11,10 +11,11 @@ const WALNUT_HITBOX = {
 export const WALNUT_CHARACTER: Character = {
     id: 'walnut',
     name: 'Walnut',
-    description: 'A tough nut to crack. Starts with extra shell fortification.',
+    description: 'A tough nut to crack but a bit sluggish.',
     hitbox: WALNUT_HITBOX,
     startingStats: {
-        maxHealth: 5,
+        maxHealth: 10,
+        maxSpeed: -20
     },
     draw: createDrawFunction(WALNUT_HITBOX, 'walnut'),
 };

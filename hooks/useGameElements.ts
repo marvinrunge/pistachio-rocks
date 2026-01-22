@@ -8,7 +8,6 @@ import {
     MAX_ELEMENT_SPEED,
     WATER_DROP_SIZE,
 } from '../constants';
-import { playMeteorImpactSound, playImpactSound } from '../utils/audio';
 
 interface UseGameElementsProps {
     gameDimensions: GameDimensions;
@@ -51,29 +50,43 @@ export const useGameElements = ({
         effectiveWaterSpawnInterval /= widthRatio;
         if (currentEvent === 'thunderstorm') effectiveWaterSpawnInterval /= 3;
 
-        if (currentTime - lastRockSpawnTime.current > rockSpawnInterval) {
+        if (lastRockSpawnTime.current === 0) {
             lastRockSpawnTime.current = currentTime;
-            let size;
-            let type: ElementType = 'rock';
-            let elementSpeedMultiplier = 1;
+        }
 
-            if (currentEvent === 'meteorShower') {
-                type = 'meteor';
-                elementSpeedMultiplier = 1.5;
-                size = Math.random() * (MAX_ELEMENT_SIZE - MIN_ELEMENT_SIZE) + MIN_ELEMENT_SIZE;
-            } else if (currentEvent === 'earthquake') {
-                size = Math.random() * (25 - MIN_ELEMENT_SIZE) + MIN_ELEMENT_SIZE;
-            } else {
-                size = Math.random() * (MAX_ELEMENT_SIZE - MIN_ELEMENT_SIZE) + MIN_ELEMENT_SIZE;
+        const timeToSpawn = currentTime - lastRockSpawnTime.current;
+        if (timeToSpawn > rockSpawnInterval) {
+            // Calculate how many rocks should have spawned
+            const rocksToSpawnCount = Math.floor(timeToSpawn / rockSpawnInterval);
+            // Cap spawns per frame to 5 to prevent extreme bursts/performance issues
+            const actualSpawns = Math.min(rocksToSpawnCount, 5);
+
+            // Advance the timer by the amount we are actually spawning
+            lastRockSpawnTime.current += actualSpawns * rockSpawnInterval;
+
+            for (let i = 0; i < actualSpawns; i++) {
+                let size;
+                let type: ElementType = 'rock';
+                let elementSpeedMultiplier = 1;
+
+                if (currentEvent === 'meteorShower') {
+                    type = 'meteor';
+                    elementSpeedMultiplier = 1.5;
+                    size = Math.random() * (MAX_ELEMENT_SIZE - MIN_ELEMENT_SIZE) + MIN_ELEMENT_SIZE;
+                } else if (currentEvent === 'earthquake') {
+                    size = Math.random() * (25 - MIN_ELEMENT_SIZE) + MIN_ELEMENT_SIZE;
+                } else {
+                    size = Math.random() * (MAX_ELEMENT_SIZE - MIN_ELEMENT_SIZE) + MIN_ELEMENT_SIZE;
+                }
+                nextElements.push({
+                    id: Date.now() + Math.random() + i, // Ensure unique IDs in loop
+                    x: Math.random() * (gameDimensions.width - size),
+                    y: -size - (i * 20), // Stagger slightly if multiple spawn at once
+                    size: size,
+                    speed: (Math.random() * (maxRockSpeed - minRockSpeed) + minRockSpeed) * elementSpeedMultiplier,
+                    type
+                });
             }
-            nextElements.push({
-                id: Date.now() + Math.random(),
-                x: Math.random() * (gameDimensions.width - size),
-                y: -size,
-                size: size,
-                speed: (Math.random() * (maxRockSpeed - minRockSpeed) + minRockSpeed) * elementSpeedMultiplier,
-                type
-            });
         }
 
         if (currentTime - lastWaterSpawnTime.current > effectiveWaterSpawnInterval) {

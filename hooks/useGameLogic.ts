@@ -1,51 +1,35 @@
 
 
 import React, { useEffect, useRef, useCallback, useState } from 'react';
-import type { PlayerState, ElementState, ParticleState, Skill, LightningStrike, Season, FloatingTextState, HighScoreEntry, ElementType, GameStatus, CloudState, FloatingScoreState, ShellBreakAnimationState, ShellPieceState, ScorePayload, SubmissionResult, CharacterId, ShellReformAnimationState, BurningPatchState, AchievementNotification, HealingFountainState } from '../types';
+import type { ElementState, ParticleState, Skill, LightningStrike, Season, FloatingTextState, HighScoreEntry, FloatingScoreState, ShellPieceState, ScorePayload, CharacterId, BurningPatchState, AchievementNotification, HealingFountainState } from '../types';
 import {
     GAME_HEIGHT,
     PLAYER_WIDTH,
     PLAYER_HEIGHT,
-    PLAYER_ACCELERATION,
-    MAX_PLAYER_SPEED,
-    GROUND_FRICTION,
-    ICE_FRICTION,
-    WIND_FORCE,
-    JUMP_STRENGTH,
     GRAVITY,
-    INITIAL_MAX_HEALTH,
     ELEMENT_SPAWN_INTERVAL,
-    MIN_ELEMENT_SIZE,
-    MAX_ELEMENT_SIZE,
     MIN_ELEMENT_SPEED,
     MAX_ELEMENT_SPEED,
     GROUND_HEIGHT,
-    INITIAL_WATER_SPAWN_INTERVAL,
-    WATER_DROP_SIZE,
-    WATER_HEAL_AMOUNT,
-    GOLDEN_TOUCH_CHANCE_INCREASE,
     MAX_PARTICLES,
     GAME_VERSION,
-    GAME_WIDTH,
 } from '../constants';
-import { initAudio, playJumpSound, playDamageSound, playImpactSound, playWaterCollectSound, playThunderSound, playLightningStrikeSound, playEarthquakeSound, playBlizzardSound, playStormSound, playBlockSound, playResurrectSound, playShellCrackSound, playSeismicSlamSound, playPhotosynthesisHealSound, playGoldenTouchSound, playGameOverSound, playMeteorImpactSound, playAchievementCompleteSound } from '../utils/audio';
+import { initAudio, playImpactSound, playSeismicSlamSound, playPhotosynthesisHealSound, playMeteorImpactSound } from '../utils/audio';
 import { loadLocalHighScores, saveLocalHighScores, savePlayerName } from '../utils/storage';
 import { getHighScores, startNewGameSession, submitScore } from '../utils/leaderboard';
-import { PERMANENT_SKILL_POOL, EVENT_SKILL_POOL, YEARLY_SKILL_POOL } from '../game/skills';
-import { getInitialPlayerState, generateInitialClouds } from '../game/state';
+import { generateInitialClouds } from '../game/state';
 import { drawGame } from '../game/drawing';
 import { assetManager } from '../game/assets';
-import { getCharacterById, type Character } from '../game/characters/index';
 import { useInput } from './useInput';
 import { useGameState } from './useGameState';
-import { createRockParticles, createWaterSplashParticles, createDustParticles, createSeasonalParticles, updateParticles } from '../game/particleLogic';
+import { createRockParticles, createWaterSplashParticles, createSeasonalParticles, updateParticles } from '../game/particleLogic';
 import { usePlayerPhysics } from './usePlayerPhysics';
 import { useCollisionSystem } from './useCollisionSystem';
 import { useGameElements } from './useGameElements';
 import { useEventSystem } from './useEventSystem';
 import { useAchievementSystem } from './useAchievementSystem';
 import { useSkillSystem } from './useSkillSystem';
-import { updateEvents, getIncomingEventTitle } from '../game/eventLogic';
+import { getIncomingEventTitle } from '../game/eventLogic';
 
 interface UseGameLogicProps {
     canvasRef: React.RefObject<HTMLCanvasElement>;

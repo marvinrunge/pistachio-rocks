@@ -96,9 +96,14 @@ export type ScorePayload = {
 
 export type GameStatus = 'start' | 'playing' | 'levelUp' | 'enteringName' | 'highScores' | 'instructions' | 'characterSelect' | 'about';
 
+export type GameDimensions = {
+  width: number;
+  height: number;
+};
+
 export type ParticleState = {
   type: string;
-  rotation: number;
+  rotation?: number;
   color: string | CanvasGradient | CanvasPattern;
   size: number;
   id: number;
