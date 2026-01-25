@@ -43,7 +43,10 @@ export const useGameElements = ({
 
         if (currentEvent === 'earthquake') rockSpawnInterval /= 1.5;
         if (currentEvent === 'thunderstorm') rockSpawnInterval *= 2;
-        if (currentEvent === 'meteorShower') rockSpawnInterval *= 1.25;
+        if (currentEvent === 'meteorShower') {
+            rockSpawnInterval *= 0.6; // More frequent meteors
+            if (rockSpawnInterval < 100) rockSpawnInterval = 100; // Meteor-specific floor
+        }
 
         // Damage multiplier based on months survived
         // Starts at 1.0, increases by 10% per month
@@ -94,7 +97,8 @@ export const useGameElements = ({
                 }
 
                 // Base damage is size-based, then scales with month
-                const baseDamage = Math.round(size / 10);
+                let baseDamage = Math.round(size / 10);
+                if (type === 'meteor') baseDamage *= 2; // Meteors are much more dangerous
                 const scaledDamage = Math.round(baseDamage * damageMultiplier);
 
                 // Visual feedback: Calculate custom color if damage is high

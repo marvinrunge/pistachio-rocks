@@ -143,7 +143,7 @@ export const useCollisionSystem = ({
                     particlesToCreate.push(...createRockParticles(el, isGolden));
 
                     // Block chance
-                    if (blockChance > 0 && Math.random() < blockChance) {
+                    if (blockChance > 0 && el.type !== 'meteor' && Math.random() < blockChance) {
                         playBlockSound();
                         floatingTextsToCreate.push({
                             id: Date.now() + Math.random(),

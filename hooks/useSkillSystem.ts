@@ -74,7 +74,7 @@ export const useSkillSystem = ({
                 setExtraLives(prev => prev + 1);
                 break;
             case 'blockChance':
-                setBlockChance(prev => Math.min(prev + 0.1, 0.9));
+                setBlockChance(prev => Math.min(prev + 0.1, 0.75));
                 break;
             case 'photosynthesis':
                 setPhotosynthesisLevel(prev => prev + 1);
@@ -108,7 +108,7 @@ export const useSkillSystem = ({
                 // At the end of other event months (3, 6, 9, 15...), offer a special event skill
                 // Filter out maxed skills
                 let pool = [...EVENT_SKILL_POOL];
-                if (blockChance >= 0.9) {
+                if (blockChance >= 0.75) {
                     pool = pool.filter(s => s.id !== 'blockChance');
                 }
                 const shuffled = pool.sort(() => 0.5 - Math.random());
