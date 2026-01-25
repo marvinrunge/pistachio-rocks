@@ -178,7 +178,7 @@ export const useEventSystem = ({
                 const strikeHitbox = { x: strike.x, y: 0, width: strike.width, height: GAME_HEIGHT - GROUND_HEIGHT };
                 if (playerHitbox.x < strikeHitbox.x + strikeHitbox.width &&
                     playerHitbox.x + playerHitbox.width > strikeHitbox.x) {
-                    const damage = 10;
+                    const damage = Math.ceil(maxHealth * 0.33);
                     if (updatedPlayer.isNaked) {
                         playGameOverSound();
                         handleGameOver();

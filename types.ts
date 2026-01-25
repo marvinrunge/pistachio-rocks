@@ -26,6 +26,8 @@ export type ElementState = {
   size: number;
   speed: number;
   type: ElementType;
+  damage: number;
+  customColor?: string;
 };
 
 export type Season = 'spring' | 'summer' | 'autumn' | 'winter';

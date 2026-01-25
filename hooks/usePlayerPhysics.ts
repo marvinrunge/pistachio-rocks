@@ -39,14 +39,18 @@ export const usePlayerPhysics = ({
         const newParticles: ParticleState[] = [];
         const { isMovingLeft, isMovingRight, isTryingToJump, resetJump } = getInputState();
 
-        const hasAgility = acquiredSkills.some(s => s.id === 'increasedAgility');
+        const agilityStacks = acquiredSkills.filter(s => s.id === 'increasedAgility').length;
         let friction = (currentEvent === 'blizzard' && nextPlayer.y <= GROUND_HEIGHT) ? ICE_FRICTION : GROUND_FRICTION;
 
-        if (hasAgility && currentEvent !== 'blizzard') {
-            friction *= 2; // Drastically increase friction for tighter control
+        // Increase friction (grip) with agility stacks to provide tighter control
+        if (agilityStacks > 0 && currentEvent !== 'blizzard') {
+            friction += friction * (agilityStacks * 0.5);
         }
 
-        const effectiveAcceleration = playerSlowTimer > 0 ? PLAYER_ACCELERATION * 0.5 : PLAYER_ACCELERATION;
+        const accelerationBoost = 1 + (agilityStacks * 0.25);
+        const effectiveAcceleration = playerSlowTimer > 0
+            ? PLAYER_ACCELERATION * 0.5 * accelerationBoost
+            : PLAYER_ACCELERATION * accelerationBoost;
 
         // Horizontal Movement
         if (isMovingLeft) {
@@ -64,14 +68,27 @@ export const usePlayerPhysics = ({
             }
         }
 
-        // Friction
-        if (!isMovingLeft && !isMovingRight && nextPlayer.y <= GROUND_HEIGHT) {
+        // Friction & Braking Particles
+        if (!isMovingLeft && !isMovingRight && nextPlayer.y <= GROUND_HEIGHT && nextPlayer.xVelocity !== 0) {
+            const oldVelocity = nextPlayer.xVelocity;
             if (nextPlayer.xVelocity > 0) {
                 nextPlayer.xVelocity -= friction * deltaTime;
                 if (nextPlayer.xVelocity < 0) nextPlayer.xVelocity = 0;
             } else if (nextPlayer.xVelocity < 0) {
                 nextPlayer.xVelocity += friction * deltaTime;
                 if (nextPlayer.xVelocity > 0) nextPlayer.xVelocity = 0;
+            }
+
+            // Spawn dust particles if we are braking hard (high friction)
+            if (agilityStacks > 0 && Math.abs(oldVelocity) > 50) {
+                if (Math.random() < 0.3) {
+                    newParticles.push(...createDustParticles({
+                        x: nextPlayer.x + PLAYER_WIDTH / 2,
+                        y: GAME_HEIGHT - GROUND_HEIGHT,
+                        count: 2,
+                        intensity: 30
+                    }));
+                }
             }
         }
 

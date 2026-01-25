@@ -82,10 +82,14 @@ export function drawRainingElement(ctx: CanvasRenderingContext2D, el: ElementSta
         const seed = el.id;
 
         let mainColor: string;
-        switch (season) {
-            case 'summer': mainColor = `rgb(${190 + random(seed) * 20}, ${170 + random(seed + 1) * 20}, ${140 + random(seed + 2) * 20})`; break;
-            case 'winter': mainColor = `rgb(${220 + random(seed) * 20}, ${225 + random(seed + 1) * 20}, ${230 + random(seed + 2) * 20})`; break;
-            default: mainColor = `rgb(${100 + random(seed) * 20}, ${100 + random(seed + 1) * 20}, ${100 + random(seed + 2) * 20})`; break;
+        if (el.customColor) {
+            mainColor = el.customColor;
+        } else {
+            switch (season) {
+                case 'summer': mainColor = `rgb(${190 + random(seed) * 20}, ${170 + random(seed + 1) * 20}, ${140 + random(seed + 2) * 20})`; break;
+                case 'winter': mainColor = `rgb(${220 + random(seed) * 20}, ${225 + random(seed + 1) * 20}, ${230 + random(seed + 2) * 20})`; break;
+                default: mainColor = `rgb(${100 + random(seed) * 20}, ${100 + random(seed + 1) * 20}, ${100 + random(seed + 2) * 20})`; break;
+            }
         }
         const borderColor = '#4a4a4a'; // Dark grey outline
 

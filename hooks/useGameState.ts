@@ -64,7 +64,18 @@ export const useGameState = (gameDimensions: { width: number, height: number }) 
     const selectedChar = getCharacterById(characterId);
     setCharacter(selectedChar);
 
-    setGameState({ player: { ...getInitialPlayerState(characterId), x: gameDimensions.width / 2 }, elements: [] });
+    const startMaxHealth = INITIAL_MAX_HEALTH + (selectedChar.startingStats.maxHealth || 0);
+
+    setGameState({
+      player: {
+        ...getInitialPlayerState(characterId),
+        x: gameDimensions.width / 2,
+        health: startMaxHealth,
+        isNaked: false,
+        isHalfShell: false
+      },
+      elements: []
+    });
     setParticles([]);
     setFloatingScores([]);
     setFloatingTexts([]);

@@ -154,7 +154,7 @@ export const useCollisionSystem = ({
                             lifespan: 1.0,
                         });
                     } else {
-                        const damage = Math.round(el.size / 10);
+                        const damage = el.damage;
                         floatingTextsToCreate.push({
                             id: Date.now() + Math.random(),
                             x: nextPlayer.x + PLAYER_WIDTH / 2,

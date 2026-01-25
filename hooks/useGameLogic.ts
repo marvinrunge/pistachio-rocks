@@ -122,8 +122,6 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
         handleGameOver
     });
 
-    const lastRockSpawnTime = useRef(0);
-    const lastWaterSpawnTime = useRef(0);
     const lastFrameTime = useRef<number>(performance.now());
     const audioInitialized = useRef(false);
     const standStillTimer = useRef(0);
@@ -134,13 +132,6 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
     const gameSessionIdRef = useRef<string | null>(null);
     const gameStateRef = useRef(gameState);
     gameStateRef.current = gameState;
-
-    const healPlayer = useCallback((amount: number) => {
-        setGameState(prev => ({
-            ...prev,
-            player: { ...prev.player, health: prev.player.health + amount }
-        }));
-    }, [setGameState]);
 
     const [achievementNotifications, setAchievementNotifications] = useState<AchievementNotification[]>([]);
     const [healingFountains, setHealingFountains] = useState<HealingFountainState[]>([]);
@@ -186,14 +177,34 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
         reinforcedShellTriggeredRef.current = true;
     }, [setGameState]);
 
-
-
     const { checkAchievementProgress, achievements, resetAchievements } = useAchievementSystem({
         setNotifications: setAchievementNotifications,
         spawnHealingFountain,
         armSeismicSlam,
         triggerReinforcedShell
     });
+
+    const healPlayer = useCallback((amount: number) => {
+        setGameState(prev => {
+            const oldHealth = prev.player.health;
+            const newHealth = Math.min(maxHealth, oldHealth + amount);
+
+            if (newHealth > oldHealth) {
+                const nextPlayer = { ...prev.player, health: newHealth };
+
+                // Shell Recovery Logic: If moving from 0 to > 0 health
+                if ((nextPlayer.isNaked || nextPlayer.isHalfShell) && oldHealth === 0) {
+                    nextPlayer.isNaked = false;
+                    nextPlayer.isHalfShell = false;
+                    setShellReformAnimation({ progress: 0, duration: 0.5 });
+                    checkAchievementProgress('shellEvader');
+                }
+
+                return { ...prev, player: nextPlayer };
+            }
+            return prev;
+        });
+    }, [setGameState, maxHealth, setShellReformAnimation, checkAchievementProgress]);
 
     const { handleLevelUp, handleSkillSelect, simulateSkillsForDebug } = useSkillSystem({
         monthCounter,
@@ -249,7 +260,7 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
         reinforcedShellTriggeredRef.current = false;
     }, [resetGameStateInternal, resetSpawnTimers, resetAchievements, selectedCharacterId]);
 
-    const startGame = useCallback(() => {
+    const startGame = useCallback((isOffline: boolean = false) => {
         if (!audioInitialized.current) {
             initAudio();
             audioInitialized.current = true;
@@ -260,16 +271,21 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
         standStillTimer.current = 0;
 
 
-        // Start a new game session with the backend
-        startNewGameSession()
-            .then(gameId => {
-                gameSessionIdRef.current = gameId;
-                console.log("Game session started:", gameId);
-            })
-            .catch(error => {
-                console.error("Could not start online game session:", error);
-                gameSessionIdRef.current = null; // Mark session as offline
-            });
+        // Start a new game session with the backend only if not in offline/debug mode
+        if (!isOffline) {
+            startNewGameSession()
+                .then(gameId => {
+                    gameSessionIdRef.current = gameId;
+                    console.log("Game session started:", gameId);
+                })
+                .catch(error => {
+                    console.error("Could not start online game session:", error);
+                    gameSessionIdRef.current = null; // Mark session as offline
+                });
+        } else {
+            gameSessionIdRef.current = null;
+            console.log("Starting in offline/debug mode - no server session.");
+        }
 
         setGameStatus('playing');
         const now = performance.now();
@@ -842,6 +858,7 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
             setLightningStrikes(nextLightningStrikes);
             setBurningPatches(nextBurningPatches);
             setScreenShake(nextScreenShake);
+            setScreenFlash(screenFlashOpacity);
 
             if (shouldClearShellAnimation) {
                 setShellBreakAnimation(null);
@@ -914,7 +931,7 @@ export const useGameLogic = ({ canvasRef, gameDimensions }: UseGameLogicProps) =
 
     // Wrapper for startDebugGame that uses the skill system hook
     const startDebugGame = (year: number, month: number) => {
-        startGame();
+        startGame(true); // Start in offline mode
         const totalMonths = year * 12 + month;
         setDifficultyLevel(totalMonths + 1);
         setMonthCounter(totalMonths + 1);
