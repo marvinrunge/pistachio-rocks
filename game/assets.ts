@@ -6,6 +6,9 @@ import {
     WALNUT_SEED_SVG,
     WALNUT_SHELL_LEFT_SVG,
     WALNUT_SHELL_RIGHT_SVG,
+    CHESTNUT_SEED_SVG,
+    CHESTNUT_SHELL_LEFT_SVG,
+    CHESTNUT_SHELL_RIGHT_SVG,
 } from './assets-data';
 
 type CharacterAssetData = {
@@ -30,7 +33,12 @@ const characterSVGData: Record<CharacterId, CharacterAssetData> = {
         seed: WALNUT_SEED_SVG,
         shellLeft: WALNUT_SHELL_LEFT_SVG,
         shellRight: WALNUT_SHELL_RIGHT_SVG,
-    }
+    },
+    chestnut: {
+        seed: CHESTNUT_SEED_SVG,
+        shellLeft: CHESTNUT_SHELL_LEFT_SVG,
+        shellRight: CHESTNUT_SHELL_RIGHT_SVG,
+    },
 };
 
 class AssetManager {
@@ -42,7 +50,7 @@ class AssetManager {
         if (!svgText) {
             return Promise.resolve(new Image());
         }
-        
+
         const svgBlob = new Blob([svgText], { type: 'image/svg+xml' });
         const url = URL.createObjectURL(svgBlob);
 

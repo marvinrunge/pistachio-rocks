@@ -1,7 +1,7 @@
 // All shared type definitions for the application.
 
 // FIX: Add new character IDs to support newly added characters.
-export type CharacterId = 'pistachio' | 'walnut';
+export type CharacterId = 'pistachio' | 'chestnut' | 'walnut';
 
 export type PlayerState = {
   x: number;
