@@ -79,7 +79,9 @@ export function spawnElements(props: SpawnProps): ElementState[] {
 
   // --- Water/Snow Spawning ---
   let effectiveWaterSpawnInterval = waterSpawnInterval / widthRatio;
-  if (currentEvent === 'thunderstorm') effectiveWaterSpawnInterval /= 3;
+  if (currentEvent === 'thunderstorm') {
+    effectiveWaterSpawnInterval /= 3;
+  }
 
   if (currentTime - lastWaterSpawnTimeRef.current > effectiveWaterSpawnInterval) {
     lastWaterSpawnTimeRef.current = currentTime;

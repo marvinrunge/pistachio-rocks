@@ -1,7 +1,13 @@
-
-- photosynthesis is too strong
-    - should be scaling with max hp (min +1hp or 1% of hp)
-    - legendary skill that is only skillable once
+- legendary skills
+    - collecting water makes invincible for 1s
+    - meteor ring
+        - per level one meteor circles around the player an destroys rocks
+    - fun skills
+        - changes rocks to look like cheese: does less damage
+- achievements
+    - jumping over 100 times unlocks double jump
+    - jumping over 1000 times unlocks flying
+    - not get hit by rocks for 3 month unlocks getting smaller
 - quest by season (not during events)
     - autumn: collect fallen sticks 100
         - sticks fall in addtion to the rocks (do no damage)
