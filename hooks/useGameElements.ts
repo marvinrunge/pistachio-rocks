@@ -65,9 +65,9 @@ export const useGameElements = ({
         }
 
         const timeSinceLastRock = currentTime - lastRockSpawnTime.current;
-        // If we've missed a lot of time (e.g. > 2 seconds), we likely just came back from a pause.
-        // Reset the timer to currentTime to prevent a massive burst of rocks.
-        if (timeSinceLastRock > 2000) {
+        // If we've missed a lot of time, we likely just came back from a pause.
+        // Use a dynamic threshold to prevent breakages on narrow screens/long intervals.
+        if (timeSinceLastRock > Math.max(2000, rockSpawnInterval * 2)) {
             lastRockSpawnTime.current = currentTime;
         }
 
@@ -130,7 +130,8 @@ export const useGameElements = ({
         }
 
         const timeSinceLastWater = currentTime - lastWaterSpawnTime.current;
-        if (timeSinceLastWater > 2000) {
+        // If we've missed a lot of time, we likely just came back from a pause.
+        if (timeSinceLastWater > Math.max(2000, effectiveWaterSpawnInterval * 2)) {
             lastWaterSpawnTime.current = currentTime;
         }
 

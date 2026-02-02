@@ -145,11 +145,12 @@ const StartMenu: React.FC<{ onStart: () => void; onShowHighScores: () => void; o
                     <BigButton onClick={onStart} disabled={!assetsReady} className={GREEN_BUTTON_CLASSES}>
                         {assetsReady ? 'Start Game' : 'Loading...'}
                     </BigButton>
-                  {import.meta.env.DEV && (
+                    {import.meta.env.DEV && (
                         <BigButton onClick={onShowDebug} className={`text-base sm:text-lg ${GRAY_BUTTON_CLASSES}`}>
                             Debug Menu
                         </BigButton>
                     )}
+
                     <BigButton onClick={onShowCharacterSelect} disabled={!assetsReady} className={GRAY_BUTTON_CLASSES}>
                         {assetsReady ? 'Change Character' : 'Loading...'}
                     </BigButton>
