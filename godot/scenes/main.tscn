@@ -1,0 +1,44 @@
+[gd_scene format=3 uid="uid://bp1st4chi0main"]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="PackedScene" uid="uid://bp1st4chi0game" path="res://scenes/game.tscn" id="2_game"]
+[ext_resource type="PackedScene" uid="uid://bp1st4chi0hud" path="res://scenes/ui/hud.tscn" id="3_hud"]
+[ext_resource type="PackedScene" uid="uid://bp1st4chi0start" path="res://scenes/ui/start_screen.tscn" id="4_start"]
+[ext_resource type="PackedScene" uid="uid://bp1st4chi0charsel" path="res://scenes/ui/character_select.tscn" id="5_charsel"]
+[ext_resource type="PackedScene" uid="uid://bp1st4chi0info" path="res://scenes/ui/info_screen.tscn" id="6_info"]
+[ext_resource type="PackedScene" uid="uid://bp1st4chi0levelup" path="res://scenes/ui/level_up_screen.tscn" id="7_levelup"]
+[ext_resource type="PackedScene" uid="uid://bp1st4chi0nameentry" path="res://scenes/ui/name_entry_screen.tscn" id="8_nameentry"]
+[ext_resource type="PackedScene" uid="uid://bp1st4chi0scores" path="res://scenes/ui/high_scores_screen.tscn" id="9_scores"]
+
+[node name="Main" type="Node"]
+script = ExtResource("1_main")
+
+[node name="Game" parent="." instance=ExtResource("2_game")]
+
+[node name="Hud" parent="." instance=ExtResource("3_hud")]
+
+[node name="Screens" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="StartScreen" parent="Screens" instance=ExtResource("4_start")]
+unique_name_in_owner = true
+
+[node name="CharacterSelect" parent="Screens" instance=ExtResource("5_charsel")]
+unique_name_in_owner = true
+visible = false
+
+[node name="InfoScreen" parent="Screens" instance=ExtResource("6_info")]
+unique_name_in_owner = true
+visible = false
+
+[node name="LevelUpScreen" parent="Screens" instance=ExtResource("7_levelup")]
+unique_name_in_owner = true
+visible = false
+
+[node name="NameEntryScreen" parent="Screens" instance=ExtResource("8_nameentry")]
+unique_name_in_owner = true
+visible = false
+
+[node name="HighScoresScreen" parent="Screens" instance=ExtResource("9_scores")]
+unique_name_in_owner = true
+visible = false
