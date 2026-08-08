@@ -1,0 +1,148 @@
+[gd_scene format=3 uid="uid://bp1st4chi0hud"]
+
+[ext_resource type="Script" path="res://scripts/hud.gd" id="1_hud"]
+
+[node name="Hud" type="CanvasLayer"]
+script = ExtResource("1_hud")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Top" type="HBoxContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = 92.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_constants/separation = 24
+
+[node name="Left" type="VBoxContainer" parent="Root/Top"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="HealthBar" type="ProgressBar" parent="Root/Top/Left"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 18)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+max_value = 20.0
+value = 20.0
+show_percentage = false
+
+[node name="HealthLabel" type="Label" parent="Root/Top/Left"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "20 / 20 HP"
+theme_override_font_sizes/font_size = 16
+
+[node name="LivesLabel" type="Label" parent="Root/Top/Left"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+
+[node name="Center" type="VBoxContainer" parent="Root/Top"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="DateLabel" type="Label" parent="Root/Top/Center"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Year 1 · Month 1 · Spring"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18
+
+[node name="MonthBar" type="ProgressBar" parent="Root/Top/Center"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+mouse_filter = 2
+show_percentage = false
+
+[node name="EventLabel" type="Label" parent="Root/Top/Center"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(1, 0.42, 0.42, 1)
+theme_override_font_sizes/font_size = 18
+
+[node name="Right" type="VBoxContainer" parent="Root/Top"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 0
+mouse_filter = 2
+
+[node name="ScoreLabel" type="Label" parent="Root/Top/Right"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 30
+
+[node name="RocksLabel" type="Label" parent="Root/Top/Right"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Rocks smashed: 0"
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 14
+
+[node name="WarningLabel" type="Label" parent="Root"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -280.0
+offset_top = 120.0
+offset_right = 280.0
+offset_bottom = 160.0
+grow_horizontal = 2
+mouse_filter = 2
+text = "STORM INCOMING"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 34
+
+[node name="Toasts" type="VBoxContainer" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 170.0
+offset_right = 300.0
+offset_bottom = 260.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="AchievementLabel" type="Label" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -96.0
+offset_right = 336.0
+offset_bottom = -16.0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.75)
+theme_override_font_sizes/font_size = 14

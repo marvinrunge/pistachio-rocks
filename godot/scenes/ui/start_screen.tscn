@@ -1,0 +1,90 @@
+[gd_scene format=3 uid="uid://bp1st4chi0start"]
+
+[ext_resource type="Script" path="res://scripts/ui/start_screen.gd" id="1_start"]
+
+[node name="StartScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_start")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.55)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Column" type="VBoxContainer" parent="Center"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Center/Column"]
+layout_mode = 2
+text = "PISTACHIO"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.65, 0.85, 0.4, 1)
+theme_override_font_sizes/font_size = 64
+
+[node name="Subtitle" type="Label" parent="Center/Column"]
+layout_mode = 2
+text = "Survive the seasons. Smash the rocks. Stay shelled."
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18
+
+[node name="Buttons" type="VBoxContainer" parent="Center/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PlayButton" type="Button" parent="Center/Column/Buttons"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Play"
+theme_override_font_sizes/font_size = 24
+
+[node name="CharacterButton" type="Button" parent="Center/Column/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Nut: Pistachio"
+
+[node name="ScoresButton" type="Button" parent="Center/Column/Buttons"]
+layout_mode = 2
+text = "High Scores"
+
+[node name="InstructionsButton" type="Button" parent="Center/Column/Buttons"]
+layout_mode = 2
+text = "How To Play"
+
+[node name="AboutButton" type="Button" parent="Center/Column/Buttons"]
+layout_mode = 2
+text = "About"
+
+[node name="MuteButton" type="Button" parent="Center/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "🔊 Sound on"
+
+[node name="VersionLabel" type="Label" parent="Center/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "v0.3.0"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(1, 1, 1, 0.6)
+theme_override_font_sizes/font_size = 14

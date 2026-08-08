@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://bp1st4chi0game"]
+
+[ext_resource type="Script" path="res://scripts/game.gd" id="1_game"]
+[ext_resource type="Script" path="res://scripts/background.gd" id="2_bg"]
+[ext_resource type="Script" path="res://scripts/fountain_layer.gd" id="3_fountain"]
+[ext_resource type="Script" path="res://scripts/player.gd" id="4_player"]
+[ext_resource type="Script" path="res://scripts/particle_field.gd" id="5_particles"]
+[ext_resource type="Script" path="res://scripts/weather_layer.gd" id="6_weather"]
+[ext_resource type="Script" path="res://scripts/floating_text_layer.gd" id="7_text"]
+
+[node name="Game" type="Node2D"]
+script = ExtResource("1_game")
+
+[node name="Background" type="Node2D" parent="."]
+script = ExtResource("2_bg")
+
+[node name="Fountains" type="Node2D" parent="."]
+script = ExtResource("3_fountain")
+
+[node name="Elements" type="Node2D" parent="."]
+
+[node name="Player" type="Node2D" parent="."]
+script = ExtResource("4_player")
+
+[node name="Particles" type="Node2D" parent="."]
+script = ExtResource("5_particles")
+
+[node name="Weather" type="Node2D" parent="."]
+script = ExtResource("6_weather")
+
+[node name="FloatingText" type="Node2D" parent="."]
+script = ExtResource("7_text")
+
+[node name="Flash" type="CanvasLayer" parent="."]
+
+[node name="ColorRect" type="ColorRect" parent="Flash"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 0)

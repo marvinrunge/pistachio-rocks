@@ -109,11 +109,82 @@ If you prefer not to use an automated service, you can build the apps locally.
     ```
 5.  From Xcode or Android Studio, you can run the app on a simulator or a physical device.
 
+### Running the Godot Version
+
+The `godot/` folder holds a stand-alone [Godot 4](https://godotengine.org/) rework of the
+same game, written in GDScript. It is completely independent from the web build —
+nothing in the repository root is needed to run it.
+
+**Prerequisites:** Godot **4.3** or newer (the standard build; no C#/.NET needed).
+
+1.  **Open the project:** start Godot, choose *Import*, and select
+    `godot/project.godot`.
+2.  **Play:** press <kbd>F5</kbd> (or the ▶ button).
+
+To run it from the command line instead:
+
+```bash
+godot --path godot
+```
+
+**Exporting:** the repository ships with ready-made presets in
+`godot/export_presets.cfg` for **Windows Desktop** (a single self-contained `.exe`),
+**Android** (`.apk`) and **Web**. Use *Project → Export…* and pick the preset you
+need; the files land in `builds/<platform>/` at the repository root. Export
+templates for your Godot version have to be installed once via
+*Editor → Manage Export Templates…*.
+
+**Automated builds:** the [`Build Godot game`](.github/workflows/godot-export.yml)
+workflow exports all three presets on every push to `main` (and on pull requests
+touching `godot/`). The Windows `.exe` and the Android `.apk` are attached to the
+workflow run as artifacts (`pistachio-windows` / `pistachio-android`), and the Web
+export is published to **GitHub Pages** at
+<https://marvinrunge.github.io/pistachio-rocks/>, where the game runs with its
+offline/local leaderboard. See [Continuous builds](#-continuous-builds) for details.
+
+Differences from the web build:
+
+- Scores are stored **locally** (in Godot's `user://savegame.cfg`) instead of on the
+  global leaderboard, so the Godot build runs fully offline.
+- Sound effects are synthesised at runtime with Godot's audio server rather than the
+  Web Audio API. All gameplay, characters, skills, weather events and achievements
+  behave the same.
+
+---
+
+## 🤖 Continuous Builds
+
+`.github/workflows/godot-export.yml` builds and exports the Godot game on GitHub
+Actions. Every run installs Godot 4.3 plus the export templates it needs and
+produces three targets in parallel:
+
+| Target | Preset | Result |
+| :----- | :----- | :----- |
+| Windows | `Windows Desktop` | `Pistachio.exe` (release build, PCK embedded) — artifact `pistachio-windows` |
+| Android | `Android` | `Pistachio.apk` (debug-signed) — artifact `pistachio-android` |
+| Web | `Web` | Static site — artifact `pistachio-web`, deployed to GitHub Pages |
+
+Notes:
+
+- The workflow runs on pushes to `main`, on pull requests that touch `godot/`, and
+  on demand via *Run workflow*. The Pages deployment only happens for `main`.
+- To enable the deployment once, set **Settings → Pages → Build and deployment →
+  Source** to **GitHub Actions**.
+- The published page is the Godot build, so it uses the **local/offline
+  leaderboard** (`user://savegame.cfg` in browser storage) instead of the Firebase
+  one. The Web preset is exported without thread support, so it needs no special
+  cross-origin isolation headers and works on GitHub Pages as-is, and it ships as a
+  PWA that stays playable offline.
+- The APK is signed with a throwaway debug keystore that is generated during the
+  run, which is enough for sideloading but not for store uploads. For a store
+  release, add a keystore to the repository secrets and export the release build.
+
 ---
 
 ## 💻 Tech Stack
 
 - **Engine:** React with TypeScript
+- **Godot Rework:** Godot 4 with GDScript (see `godot/`)
 - **Native Wrapper:** Capacitor
 - **Styling:** Tailwind CSS
 - **Audio:** Web Audio API

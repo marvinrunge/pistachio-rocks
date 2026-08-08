@@ -1,0 +1,154 @@
+name: Build Godot game
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'godot/**'
+      - '.github/workflows/godot-export.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: godot-export-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: '4.3'
+
+jobs:
+  export:
+    name: Export ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: web
+            preset: Web
+            mode: release
+            templates: web_nothreads_release.zip
+            output: builds/web/index.html
+            artifact: pistachio-web
+            upload: builds/web
+          - target: windows
+            preset: Windows Desktop
+            mode: release
+            templates: windows_release_x86_64.exe windows_release_x86_64_console.exe
+            output: builds/windows/Pistachio.exe
+            artifact: pistachio-windows
+            upload: builds/windows/Pistachio.exe
+          - target: android
+            preset: Android
+            mode: debug
+            templates: android_debug.apk
+            output: builds/android/Pistachio.apk
+            artifact: pistachio-android
+            upload: builds/android/Pistachio.apk
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Godot
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          curl -fsSL -o godot.zip \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          sudo install -m 755 "Godot_v${GODOT_VERSION}-stable_linux.x86_64" /usr/local/bin/godot
+          rm -f godot.zip "Godot_v${GODOT_VERSION}-stable_linux.x86_64"
+
+      - name: Install export templates
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          curl -fsSL -o templates.tpz \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          templates_dir="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "$templates_dir"
+          for template in ${{ matrix.templates }}; do
+            unzip -q -o -j templates.tpz "templates/$template" -d "$templates_dir"
+          done
+          rm -f templates.tpz
+
+      - name: Set up Java
+        if: matrix.target == 'android'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Configure Android SDK and debug signing
+        if: matrix.target == 'android'
+        run: |
+          set -euo pipefail
+          # The APK is signed with a throwaway debug key so that it can be
+          # installed for testing. Add a release keystore to the repository
+          # secrets and export the release build to publish to a store.
+          keystore="$RUNNER_TEMP/debug.keystore"
+          keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android \
+            -keystore "$keystore" -storepass android -validity 9999 \
+            -dname "CN=Android Debug,O=Android,C=US" -deststoretype pkcs12
+          mkdir -p "$HOME/.config/godot"
+          cat > "$HOME/.config/godot/editor_settings-${GODOT_VERSION}.tres" <<EOF
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          export/android/debug_keystore = "$keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          EOF
+
+      - name: Import project
+        run: godot --headless --path godot --import
+
+      - name: Export ${{ matrix.preset }}
+        run: |
+          set -euo pipefail
+          output="$GITHUB_WORKSPACE/${{ matrix.output }}"
+          mkdir -p "$(dirname "$output")"
+          godot --headless --path godot --export-${{ matrix.mode }} "${{ matrix.preset }}" "$output"
+          test -s "$output"
+
+      - name: Upload ${{ matrix.target }} build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.upload }}
+          if-no-files-found: error
+
+  deploy-pages:
+    name: Deploy web build to GitHub Pages
+    needs: export
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download web build
+        uses: actions/download-artifact@v4
+        with:
+          name: pistachio-web
+          path: web
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

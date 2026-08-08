@@ -26,3 +26,6 @@ dist-ssr
 # Firebase
 .agent/
 .firebase/
+
+# Godot exports
+builds/

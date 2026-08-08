@@ -1,0 +1,5 @@
+# Godot editor / build artifacts
+.godot/
+android/
+builds/
+*.tmp
