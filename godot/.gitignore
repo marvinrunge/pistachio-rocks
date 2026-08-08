@@ -1,6 +1,5 @@
 # Godot editor / build artifacts
 .godot/
 android/
-export_presets.cfg
 builds/
 *.tmp

@@ -54,3 +54,22 @@ scripts/   Gameplay logic
 
 Everything else — characters, skills, achievements, seasons, weather events and the
 difficulty curve — follows the same formulas as the web version.
+
+## Exporting
+
+`export_presets.cfg` is committed, so *Project → Export…* already offers:
+
+| Preset | Output |
+| :----- | :----- |
+| `Windows Desktop` | `../builds/windows/Pistachio.exe` (x86_64, PCK embedded) |
+| `Android` | `../builds/android/Pistachio.apk` |
+| `Web` | `../builds/web/index.html` (no thread support, PWA enabled) |
+
+Paths are relative to this folder, so exports end up in `builds/` at the repository
+root (git-ignored). Install the matching export templates once via
+*Editor → Manage Export Templates…*; Android exports additionally need the Android
+SDK and a debug keystore configured in *Editor → Editor Settings → Export → Android*.
+
+The same presets are exported on CI by `.github/workflows/godot-export.yml`, which
+uploads the `.exe` and `.apk` as build artifacts and publishes the Web export to
+GitHub Pages.
