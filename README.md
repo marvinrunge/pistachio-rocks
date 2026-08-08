@@ -109,11 +109,42 @@ If you prefer not to use an automated service, you can build the apps locally.
     ```
 5.  From Xcode or Android Studio, you can run the app on a simulator or a physical device.
 
+### Running the Godot Version
+
+The `godot/` folder holds a stand-alone [Godot 4](https://godotengine.org/) rework of the
+same game, written in GDScript. It is completely independent from the web build —
+nothing in the repository root is needed to run it.
+
+**Prerequisites:** Godot **4.3** or newer (the standard build; no C#/.NET needed).
+
+1.  **Open the project:** start Godot, choose *Import*, and select
+    `godot/project.godot`.
+2.  **Play:** press <kbd>F5</kbd> (or the ▶ button).
+
+To run it from the command line instead:
+
+```bash
+godot --path godot
+```
+
+**Exporting:** use *Project → Export…* and add the preset you need (Windows, Linux,
+macOS, Android, iOS or Web). Export templates for your Godot version have to be
+installed once via *Editor → Manage Export Templates…*.
+
+Differences from the web build:
+
+- Scores are stored **locally** (in Godot's `user://savegame.cfg`) instead of on the
+  global leaderboard, so the Godot build runs fully offline.
+- Sound effects are synthesised at runtime with Godot's audio server rather than the
+  Web Audio API. All gameplay, characters, skills, weather events and achievements
+  behave the same.
+
 ---
 
 ## 💻 Tech Stack
 
 - **Engine:** React with TypeScript
+- **Godot Rework:** Godot 4 with GDScript (see `godot/`)
 - **Native Wrapper:** Capacitor
 - **Styling:** Tailwind CSS
 - **Audio:** Web Audio API

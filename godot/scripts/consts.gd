@@ -27,6 +27,10 @@ const WIND_FORCE := 400.0
 const NAKED_PLAYER_WIDTH := PLAYER_WIDTH * 0.55
 const NAKED_PLAYER_HEIGHT := PLAYER_HEIGHT * 0.85
 
+# --- Touch input ---
+## Vertical drag distance (in pixels) that counts as a jump swipe.
+const JUMP_SWIPE_THRESHOLD := 50.0
+
 # --- Falling elements ---
 const ELEMENT_SPAWN_INTERVAL := 0.45
 const MIN_ELEMENT_SPAWN_INTERVAL := 0.16

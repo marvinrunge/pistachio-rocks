@@ -62,6 +62,8 @@ var _shake_timer := 0.0
 var _shake_strength := 0.0
 var _flash := 0.0
 var _jump_buffer := false
+var _touch_sides: Dictionary = {}
+var _touch_origins: Dictionary = {}
 
 
 func _ready() -> void:
@@ -90,8 +92,40 @@ func reset_background() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if running and event.is_action_pressed("jump"):
+	if not running:
+		return
+	if event.is_action_pressed("jump"):
 		_jump_buffer = true
+	elif event is InputEventScreenTouch:
+		_handle_touch(event)
+	elif event is InputEventScreenDrag:
+		_handle_drag(event)
+
+
+## Touch controls mirror the web build: hold a screen half to walk that way and
+## swipe up to jump.
+func _handle_touch(event: InputEventScreenTouch) -> void:
+	if event.pressed:
+		_touch_sides[event.index] = -1 if event.position.x < _game_width * 0.5 else 1
+		_touch_origins[event.index] = event.position.y
+	else:
+		_touch_sides.erase(event.index)
+		_touch_origins.erase(event.index)
+
+
+func _handle_drag(event: InputEventScreenDrag) -> void:
+	if not _touch_origins.has(event.index):
+		return
+	if _touch_origins[event.index] - event.position.y > Consts.JUMP_SWIPE_THRESHOLD:
+		_jump_buffer = true
+		_touch_origins.erase(event.index)
+
+
+func _touch_direction() -> int:
+	var direction := 0
+	for side in _touch_sides.values():
+		direction += side
+	return signi(direction)
 
 
 func agility_stacks() -> int:
@@ -138,6 +172,8 @@ func start_run(id: String) -> void:
 	_shake_strength = 0.0
 	_flash = 0.0
 	_jump_buffer = false
+	_touch_sides.clear()
+	_touch_origins.clear()
 	position = Vector2.ZERO
 
 	_refresh_width()
@@ -186,6 +222,8 @@ func apply_skill(skill: Dictionary) -> void:
 	background.season = season
 	_start_event_if_due()
 	_jump_buffer = false
+	_touch_sides.clear()
+	_touch_origins.clear()
 	running = true
 	hud_changed.emit()
 
@@ -238,10 +276,11 @@ func _update_player(delta: float) -> void:
 	if current_event == "storm":
 		wind = Consts.WIND_FORCE * wind_direction
 
+	var touch_direction := _touch_direction()
 	var effects: Array = player.update_physics(
 		delta,
-		Input.is_action_pressed("move_left"),
-		Input.is_action_pressed("move_right"),
+		Input.is_action_pressed("move_left") or touch_direction < 0,
+		Input.is_action_pressed("move_right") or touch_direction > 0,
 		_jump_buffer or Input.is_action_pressed("jump"),
 		max_speed,
 		_slow_timer > 0.0,
