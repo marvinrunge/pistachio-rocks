@@ -58,7 +58,7 @@ func add_high_score(entry: Dictionary) -> int:
 	_config.set_value("scores", Consts.GAME_VERSION, scores)
 	_save()
 	for i in scores.size():
-		if scores[i] == entry:
+		if is_same(scores[i], entry):
 			return i + 1
 	return 0
 

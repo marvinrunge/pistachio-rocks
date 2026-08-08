@@ -188,6 +188,9 @@ func _play(key: String, layers: Array) -> void:
 	_play_with_pitch(key, layers, 1.0, 1.0)
 
 
+## Plays a cached sound. Rendered buffers are keyed by `key` alone, so `layers`
+## must always describe the same waveform for a given key; `pitch` and `volume`
+## are applied on the voice instead of being baked into the buffer.
 func _play_with_pitch(key: String, layers: Array, pitch: float, volume: float) -> void:
 	if _muted or _voices.is_empty():
 		return

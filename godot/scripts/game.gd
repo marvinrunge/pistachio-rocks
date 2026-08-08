@@ -455,8 +455,8 @@ func _update_elements(delta: float) -> void:
 		element.advance(delta)
 		if not consumed and running and player_rect.intersects(element.hitbox()):
 			consumed = true
-			element.queue_free()
 			_resolve_player_collision(element)
+			element.queue_free()
 			if not running:
 				return
 			continue

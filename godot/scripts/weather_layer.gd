@@ -4,6 +4,8 @@ extends Node2D
 const WARNING_DURATION := 1.2
 const STRIKE_VISIBLE := 0.1
 const PATCH_LIFESPAN := 3.0
+const EMBER_INTERVAL := 0.06
+const MAX_EMBERS := 6
 
 var _strikes: Array[Dictionary] = []
 var _patches: Array[Dictionary] = []
@@ -34,7 +36,13 @@ func add_strike(x: float, width: float) -> void:
 
 
 func add_patch(x: float, width: float) -> void:
-	_patches.append({"x": x - 10.0, "width": width + 20.0, "lifespan": PATCH_LIFESPAN})
+	_patches.append({
+		"x": x - 10.0,
+		"width": width + 20.0,
+		"lifespan": PATCH_LIFESPAN,
+		"embers": [],
+		"ember_timer": 0.0,
+	})
 
 
 ## Returns true when the player's horizontal span overlaps a burning patch.
@@ -60,10 +68,29 @@ func update(delta: float) -> Array[Vector2]:
 
 	for patch in _patches:
 		patch["lifespan"] -= delta
+		_update_embers(patch, delta)
 	_patches = _patches.filter(func(patch): return patch["lifespan"] > 0.0)
 
 	queue_redraw()
 	return hits
+
+
+## Embers are respawned on a fixed timer instead of inside [method _draw], so they
+## flicker at the same rate no matter what the display refresh rate is.
+func _update_embers(patch: Dictionary, delta: float) -> void:
+	patch["ember_timer"] -= delta
+	if patch["ember_timer"] > 0.0:
+		return
+	patch["ember_timer"] = EMBER_INTERVAL
+	var embers: Array = patch["embers"]
+	if embers.size() >= MAX_EMBERS:
+		embers.remove_at(0)
+	embers.append({
+		"position": Vector2(
+			patch["x"] + randf() * patch["width"], Consts.GROUND_Y + randf() * 8.0 - 4.0
+		),
+		"radius": randf() * 2.0 + 1.0,
+	})
 
 
 func _make_bolt(x: float, width: float) -> PackedVector2Array:
@@ -85,11 +112,8 @@ func _draw() -> void:
 			Color(0.23, 0.18, 0.13, alpha),
 			true
 		)
-		if randf() > 0.5:
-			var ember := Vector2(
-				patch["x"] + randf() * patch["width"], Consts.GROUND_Y + randf() * 8.0 - 4.0
-			)
-			draw_circle(ember, randf() * 2.0 + 1.0, Color(0.98, 0.45, 0.09, alpha))
+		for ember in patch["embers"]:
+			draw_circle(ember["position"], ember["radius"], Color(0.98, 0.45, 0.09, alpha))
 
 	for strike in _strikes:
 		if strike["struck"]:
